@@ -3,8 +3,7 @@ import axios from 'axios';
 
 // Obtener la URL base de la API desde las variables de entorno de Vite
 // Vite usa import.meta.env y las variables deben empezar con VITE_
-const API_URL =  'http://localhost:4000/api'; // Ajusta el puerto si tu backend no usa el 3000
-
+const API_URL = import.meta.env.VITE_API_URL;
 const clienteApi = axios.create({
   baseURL: API_URL,
   headers: {

@@ -2,7 +2,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css'; // Importa el CSS de react-toastify
+import 'react-toastify/dist/ReactToastify.css';
 
 import { AuthProvider } from './context/AuthContext.jsx';
 
@@ -19,12 +19,22 @@ import EmpleadosList from './pages/empleados/EmpleadosList';
 import RecetasList from './pages/recetas/RecetasList';
 import RecetaDetail from './pages/recetas/RecetaDetail';
 
+// 🆕 IMPORTACIONES DE ÓRDENES DE PRODUCCIÓN
+import OrdenList from './pages/ordenes/OrdenList';
+import OrdenDetail from './pages/ordenes/OrdenDetail';
+import OrdenForm from './components/ordenes/OrdenForm'; // O la ruta donde lo guardaste
+import MovimientoForm from './components/movimientos/MovimientoForm';
+import MovimientosList from './pages/movimientos/MovimientosList';
+import MovimientoDetalle from './pages/movimientos/MovimientoDetalle';
+import MateriaPrimaPage from './pages/inventario/MateriaPrimaPage';
+import ProductoTerminadoPage from './pages/inventario/ProductoTerminadoPage';
+
 function App() {
   return (
     <Router>
       <AuthProvider>
         <div>
-        <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
+          <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
           <Routes>
             {/* Ruta pública para el login */}
             <Route path="/login" element={<PaginaLogin />} />
@@ -42,9 +52,21 @@ function App() {
               <Route path="empleados" element={<EmpleadosList />} />
               <Route path="recetas" element={<RecetasList />} />
               <Route path="/recetas/:id_producto" element={<RecetaDetail />} />
-            
-            </Route>
-          </Routes>
+
+              {/* 🆕 RUTAS DE ÓRDENES DE PRODUCCIÓN */}
+              <Route path="ordenes" element={<OrdenList />} />
+              <Route path="ordenes/:id" element={<OrdenDetail />} />
+              <Route path="ordenes/nueva" element={<OrdenForm />} />
+              <Route path="ordenes/editar/:id" element={<OrdenForm />} />
+
+              <Route path="movimientos" element={<MovimientosList />} />
+              <Route path="movimientos/nuevo" element={<MovimientoForm />} />
+              <Route path="movimientos/:id" element={<MovimientoDetalle />} />
+
+              <Route path="/inventario/materia-prima" element={<MateriaPrimaPage />} />
+              <Route path="/inventario/producto-terminado" element={<ProductoTerminadoPage />} />
+          </Route>
+        </Routes>
         </div>
       </AuthProvider>
     </Router>

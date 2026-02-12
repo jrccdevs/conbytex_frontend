@@ -14,28 +14,42 @@ const MateriaPrimaPage = () => {
     const [cargando, setCargando] = useState(true);
 
     useEffect(() => {
-        const cargarDataDirecta = async () => {
+        const cargarData = async () => {
             try {
-                const almacenes = await getAlmacenes();
-                const promesas = almacenes.map(a => getStockPorAlmacen(a.id_almacen));
-                const resultados = await Promise.all(promesas);
-                const todoMP = resultados.flat().filter(item => item.tipo_producto === 'MP');
-                setStockTotal(todoMP);
+                // Solo consultamos almacén MP (id = 1)
+                const response = await getStockPorAlmacen(1);
+    
+                const contenido = response?.data || response;
+    
+                const soloMP = Array.isArray(contenido)
+                    ? contenido.filter(item =>
+                        item.tipo_producto?.toString().trim().toUpperCase() === 'MP'
+                      )
+                    : [];
+    
+                setStockTotal(soloMP);
                 setCargando(false);
+    
             } catch (error) {
                 console.error("Error al cargar MP:", error);
                 setCargando(false);
             }
         };
-        cargarDataDirecta();
+    
+        cargarData();
     }, []);
+    
 
     const totalVariedades = stockTotal.length;
-    const unidadesTotales = stockTotal.reduce((acc, curr) => acc + Number(curr.stock_actual), 0);
+    const unidadesTotales = stockTotal.reduce((acc, curr) => 
+        acc + Number(curr.stock_fisico || curr.stock_actual), 0
+    );
 
-    const handlePrint = () => {
-        window.print();
-    };
+    // OPCIONAL: Podrías añadir una constante para ver cuánto tienes "parado"
+    const totalReservado = stockTotal.reduce((acc, curr) => 
+        acc + Number(curr.stock_reservado || 0), 0
+    );
+    const handlePrint = () => { window.print(); };
 
     if (cargando) {
         return (
@@ -64,12 +78,9 @@ const MateriaPrimaPage = () => {
                     startIcon={<PrintIcon />} 
                     onClick={handlePrint}
                     sx={{ 
-                        bgcolor: '#00838f', 
-                        '&:hover': { bgcolor: '#006064' },
-                        display: { xs: 'none', sm: 'flex' },
-                        borderRadius: 2,
-                        textTransform: 'none',
-                        fontWeight: 'bold'
+                        bgcolor: '#00838f', '&:hover': { bgcolor: '#006064' },
+                        display: { xs: 'none', sm: 'flex' }, borderRadius: 2,
+                        textTransform: 'none', fontWeight: 'bold'
                     }}
                     className="no-print"
                 >
@@ -111,35 +122,17 @@ const MateriaPrimaPage = () => {
             <style>
                 {`
                     @media print {
-                        /* Oculta menús, sidebars, navbars y botones */
                         nav, aside, header, footer, .no-print, button,
-                        .MuiDrawer-root, .MuiAppBar-root, [class*="sidebar"], [class*="Sidebar"], [class*="menu"] {
+                        .MuiDrawer-root, .MuiAppBar-root, [class*="sidebar"], [class*="menu"] {
                             display: none !important;
                         }
-                        
-                        /* Ajusta el contenedor al ancho total de la hoja */
                         .MuiContainer-root {
                             max-width: 100% !important;
                             width: 100% !important;
                             margin: 0 !important;
                             padding: 0 !important;
                         }
-
-                        body {
-                            background-color: white !important;
-                            margin: 0;
-                            padding: 10mm;
-                        }
-
-                        .MuiPaper-root {
-                            box-shadow: none !important;
-                            border: 1px solid #eee !important;
-                        }
-
-                        h3 {
-                            color: black !important;
-                            font-size: 22pt !important;
-                        }
+                        body { background-color: white !important; margin: 0; padding: 10mm; }
                     }
                 `}
             </style>

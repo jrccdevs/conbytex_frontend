@@ -19,6 +19,13 @@ const MovimientosList = () => {
     const navigate = useNavigate();
     const { usuario } = useAuth();
 
+    const user = usuario?.user ?? usuario;
+  const isAdmin = user?.roles?.some(r => r.slug === 'admin');
+  const hasPermission = (perm) => user?.permissions?.some(p => p.slug === perm);
+
+  const canCreate = isAdmin || hasPermission('movimientos.create');
+  const canDelete = isAdmin || hasPermission('movimientos.delete');
+
     const fetchMovimientos = async () => {
         setLoading(true);
         try {
@@ -60,7 +67,7 @@ const MovimientosList = () => {
         <Box sx={{ p: 3 }}>
             <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
                 <Typography variant="h4" fontWeight="bold" color="primary">Historial de Inventario</Typography>
-                {usuario?.role === 'admin' && (
+                {canCreate && (
                     <Button 
                         variant="contained" 
                         startIcon={<AddIcon />} 
@@ -117,7 +124,7 @@ const MovimientosList = () => {
                                             <VisibilityIcon />
                                         </IconButton>
                                     </Tooltip>
-                                    {usuario?.role === 'admin' && (
+                                    {canDelete && (
                                         <IconButton color="error" onClick={() => handleDelete(m.id_movimiento)}>
                                             <DeleteIcon />
                                         </IconButton>

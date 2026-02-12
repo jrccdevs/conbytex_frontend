@@ -1,4 +1,4 @@
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Typography } from '@mui/material';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Box, Typography } from '@mui/material';
 
 const InventarioTablaPT = ({ stock = [] }) => {
     return (
@@ -16,15 +16,63 @@ const InventarioTablaPT = ({ stock = [] }) => {
                         stock.map((item) => (
                             <TableRow key={item.id_producto} hover>
                                 <TableCell>{item.id_producto}</TableCell>
-                                <TableCell>{item.nombre_producto}</TableCell>
+                                <TableCell>
+    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        
+        {/* Línea lateral sutil */}
+        <Box
+            sx={{
+                width: 4,
+                height: 40,
+                borderRadius: 1,
+                bgcolor: 'primary.light',
+                mr: 1.5,
+                opacity: 0.6
+            }}
+        />
+
+        {/* Contenido */}
+        <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+            
+            <Typography
+                variant="body1"
+                sx={{ fontWeight: 600 }}
+            >
+                {item.nombre_producto}
+            </Typography>
+
+            {(item.nombre_material || item.nombre_color) && (
+                <Typography
+                    variant="body2"
+                    sx={{
+                        color: 'text.secondary',
+                        fontWeight: 500,
+                        mt: 0.2
+                    }}
+                >
+                    {[item.nombre_material, item.nombre_color]
+                        .filter(Boolean)
+                        .join(' • ')}
+                </Typography>
+            )}
+
+        </Box>
+    </Box>
+</TableCell>
                                 <TableCell align="right">
-                                    <Typography 
-                                        fontWeight="bold" 
-                                        color={Number(item.stock_actual) < 0 ? 'error.main' : 'success.main'}
-                                    >
-                                        {item.stock_actual}
-                                    </Typography>
-                                </TableCell>
+  <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'baseline', gap: 0.5 }}>
+    <Typography variant="body1" fontWeight="700">
+      {Number(item.stock_fisico ?? 0).toFixed(2)}
+    </Typography>
+    <Typography 
+      variant="caption" 
+      color="text.secondary" 
+      sx={{ textTransform: 'lowercase' }}
+    >
+      {item.nombre_unidad || 'uds.'}
+    </Typography>
+  </Box>
+</TableCell>
                             </TableRow>
                         ))
                     ) : (

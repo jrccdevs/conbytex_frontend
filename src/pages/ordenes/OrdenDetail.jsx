@@ -55,7 +55,7 @@ const OrdenDetail = () => {
             >
                 <Button 
                     startIcon={<ArrowBackIcon />} 
-                    onClick={() => navigate('/ordenes')}
+                    onClick={() => navigate('/orden')}
                     variant="outlined"
                     sx={{ borderRadius: 2, textTransform: 'none' }}
                 >
@@ -102,11 +102,15 @@ const OrdenDetail = () => {
                         </Typography>
                     </Box>
                     <Box sx={{ textAlign: 'right' }}>
-                        <Chip 
-                            label={orden.estado.toUpperCase()} 
-                            color={orden.estado === 'pendiente' ? 'warning' : 'success'} 
-                            sx={{ fontWeight: 'bold', mb: 1 }}
-                        />
+                    <Chip 
+    label={orden.estado.toUpperCase()} 
+    color={
+        orden.estado === 'pendiente' ? 'warning' : 
+        orden.estado === 'en_proceso' ? 'info' : 
+        orden.estado === 'completado' ? 'success' : 'error'
+    } 
+    sx={{ fontWeight: 'bold', mb: 1 }}
+/>
                         <Typography variant="body2" color="text.secondary">
                             Generado el: {new Date(orden.fecha).toLocaleDateString()}
                         </Typography>

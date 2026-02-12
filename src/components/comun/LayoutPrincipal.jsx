@@ -24,44 +24,40 @@ function LayoutPrincipal() {
 
   if (cargando) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', bgcolor: '#050505' }}>
         <CircularProgress />
-        <Typography variant="h6" sx={{ ml: 2 }}>Cargando aplicación...</Typography>
+        <Typography variant="h6" sx={{ ml: 2, color: 'white' }}>Cargando sistema...</Typography>
       </Box>
     );
   }
 
-  const handleNavigate = (path) => {
-    navigate(path);
-    setDrawerOpen(false);
-  };
-
   return (
-    <Box sx={{ display: 'flex', height: '100vh' }}>
-      {/* Sidebar escritorio */}
+    <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+      {/* Sidebar escritorio: QUITAMOS EL SLIDE */}
       {!isMobile && (
-        <Slide direction="right" in={!isMobile} mountOnEnter unmountOnExit>
-          <Drawer
-            variant="permanent"
-            sx={{
+        <Drawer
+          variant="permanent"
+          sx={{
+            width: drawerWidth,
+            flexShrink: 0,
+            [`& .MuiDrawer-paper`]: {
               width: drawerWidth,
-              flexShrink: 0,
-              [`& .MuiDrawer-paper`]: {
-                width: drawerWidth,
-                boxSizing: 'border-box'
-              }
-            }}
-          >
-            <Sidebar usuario={usuario} onNavigate={handleNavigate} onLogout={cerrarSesion} drawerWidth={drawerWidth} />
-          </Drawer>
-        </Slide>
+              boxSizing: 'border-box',
+              borderRight: '1px solid rgba(255,255,255,0.1)',
+              bgcolor: '#0f172a', // Color oscuro para mantener la estética
+              color: 'white'
+            }
+          }}
+        >
+          <Sidebar usuario={usuario} onNavigate={(p) => navigate(p)} onLogout={cerrarSesion} drawerWidth={drawerWidth} />
+        </Drawer>
       )}
 
       {/* AppBar móvil */}
       {isMobile && (
-        <AppBar position="fixed" sx={{ background: '#203a43' }}>
+        <AppBar position="fixed" sx={{ background: '#0f172a', zIndex: theme.zIndex.drawer + 1 }}>
           <Toolbar sx={{ justifyContent: 'space-between' }}>
-            <Typography variant="h6">Gestión</Typography>
+            <Typography variant="h6">CONTROL INDUSTRIAL</Typography>
             <IconButton color="inherit" onClick={() => setDrawerOpen(true)}>
               <MenuIcon />
             </IconButton>
@@ -69,14 +65,18 @@ function LayoutPrincipal() {
         </AppBar>
       )}
 
-      {/* Drawer móvil */}
+      {/* Drawer móvil: variant temporary es automática aquí */}
       <Drawer
         anchor="left"
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        sx={{ [`& .MuiDrawer-paper`]: { width: drawerWidth, background: '#203a43', color: 'white' } }}
+        ModalProps={{ keepMounted: true }} // Mejora rendimiento en móvil
+        sx={{ 
+          display: { xs: 'block', sm: 'none' },
+          [`& .MuiDrawer-paper`]: { width: drawerWidth, background: '#0f172a', color: 'white' } 
+        }}
       >
-        <Sidebar usuario={usuario} onNavigate={handleNavigate} onLogout={cerrarSesion} drawerWidth={drawerWidth} />
+        <Sidebar usuario={usuario} onNavigate={(path) => { navigate(path); setDrawerOpen(false); }} onLogout={cerrarSesion} drawerWidth={drawerWidth} />
       </Drawer>
 
       {/* Contenido principal */}
@@ -88,7 +88,9 @@ function LayoutPrincipal() {
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           mt: isMobile ? '64px' : 0,
           background: '#f4f6f8',
-          overflow: 'auto'
+          overflow: 'auto',
+          position: 'relative',
+          zIndex: 1 // Asegura que esté por encima de cualquier residuo visual
         }}
       >
         <Outlet />
@@ -96,5 +98,4 @@ function LayoutPrincipal() {
     </Box>
   );
 }
-
 export default LayoutPrincipal;

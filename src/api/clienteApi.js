@@ -1,9 +1,7 @@
-// src/api/clienteApi.js
 import axios from 'axios';
 
-// Obtener la URL base de la API desde las variables de entorno de Vite
-// Vite usa import.meta.env y las variables deben empezar con VITE_
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+
 const clienteApi = axios.create({
   baseURL: API_URL,
   headers: {
@@ -11,16 +9,28 @@ const clienteApi = axios.create({
   },
 });
 
-// Interceptor para añadir el token JWT a todas las solicitudes (si existe)
+// Interceptor de SOLICITUD: Añade el token
 clienteApi.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token'); // Asumimos que guardamos el token en localStorage
+    const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
+  (error) => Promise.reject(error)
+);
+
+// Interceptor de RESPUESTA: Maneja el error 401 globalmente
+clienteApi.interceptors.response.use(
+  (response) => response,
   (error) => {
+    if (error.response && error.response.status === 401) {
+      // Si el servidor dice que no estamos autorizados, limpiamos todo
+      localStorage.removeItem('token');
+      localStorage.removeItem('usuario');
+      // No redireccionamos aquí para evitar conflictos con el AuthContext
+    }
     return Promise.reject(error);
   }
 );

@@ -38,22 +38,33 @@ const MovimientoForm = () => {
     }, []);
 
     const handleSubmit = async () => {
-        // Verificamos que cantidad sea mayor a 0
-        if(!formData.id_producto || !formData.cantidad || formData.cantidad <= 0 || !formData.id_almacen) {
-            return Swal.fire('Atención', 'Ingresa un producto, almacén y cantidad válida', 'warning');
+        // 1. Validación básica de campos
+        if(!formData.id_producto || !formData.id_almacen || !formData.id_empleado) {
+            return Swal.fire('Atención', 'Por favor completa todos los campos de selección', 'warning');
         }
+    
+        // 2. Validación de número positivo
+        const cantNum = Number(formData.cantidad);
+        if(isNaN(cantNum) || cantNum <= 0) {
+            return Swal.fire('Error', 'La cantidad debe ser un número mayor a 0', 'error');
+        }
+    
+        // 3. Validación de descripción en ajustes (Buena práctica)
+        if(formData.tipo_movimiento === 'ajuste' && !formData.descripcion) {
+            return Swal.fire('Atención', 'Los ajustes de inventario requieren una descripción de motivo', 'warning');
+        }
+    
         try {
-            // Aseguramos que cantidad viaje como número
             await createMovimiento({
                 ...formData,
-                cantidad: Number(formData.cantidad)
+                cantidad: cantNum
             });
             Swal.fire('Registrado', 'Movimiento procesado con éxito', 'success');
             navigate('/movimientos');
         } catch (error) {
-            // Si el backend lanza error (ej: falta de stock), mostrar el mensaje del servidor
-            const mensajeError = error.response?.data?.error || 'No se pudo registrar';
-            Swal.fire('Error', mensajeError, 'error');
+            // El error.response.data.message traerá el texto "Stock insuficiente..." del backend
+            const mensaje = error.response?.data?.message || 'No se pudo completar la operación';
+            Swal.fire('Operación Fallida', mensaje, 'error');
         }
     };
     const getMainColor = () => {
@@ -182,6 +193,7 @@ const MovimientoForm = () => {
                                     '&:hover': { bgcolor: getMainColor(), opacity: 0.9 }
                                 }}
                             >
+                                
                                 Procesar {formData.tipo_movimiento}
                             </Button>
                         </Box>

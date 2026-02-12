@@ -1,8 +1,14 @@
 import clienteApi from './clienteApi';
 
 // PRODUCTOS
+export const getProductosConReceta = async () => {
+  const response = await clienteApi.get("/productos/con-receta");
+  return response.data;
+};
+
 export const getProductos = async () => {
   const res = await clienteApi.get('/productos');
+  console.log("productos de stock",res);
   return res.data;
 };
 

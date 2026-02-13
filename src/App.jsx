@@ -42,7 +42,7 @@ import AsignacionSeguridad from './pages/admin/AsignacionSeguridad';
 import RolesList from './pages/admin/RolesList';
 import RolForm from './pages/admin/RolForm';
 
-import PaginaLogin from './pages/login';
+import PaginaLogin from './pages/Login';
 import Dashboard from './pages/Dashboard';
 
 

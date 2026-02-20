@@ -40,13 +40,20 @@ const EmpleadoTable = ({ empleados, onEdit, onDelete }) => {
   /* ============================
      🎨 UTILIDADES VISUALES
      ============================ */
-  const stringToColor = (string) => {
-    let hash = 0;
-    for (let i = 0; i < string.length; i++) {
-      hash = string.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    return `hsl(${hash % 360}, 70%, 50%)`;
-  };
+     const stringToColor = () => {
+
+      // Tono completamente aleatorio (0 a 360)
+      const hue = Math.floor(Math.random() * 360);
+    
+      // Saturación aleatoria entre 40% y 90% (evita colores apagados)
+      const saturation = Math.floor(Math.random() * 50) + 40;
+    
+      // Luminosidad aleatoria entre 30% y 70% (evita solo claros)
+      const lightness = Math.floor(Math.random() * 40) + 30;
+    
+      return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+    };
+    
 
   return (
     <TableContainer
@@ -114,7 +121,7 @@ const EmpleadoTable = ({ empleados, onEdit, onDelete }) => {
                       fontWeight: 800
                     }}
                   >
-                    {emp.nombre_empleado.charAt(0).toUpperCase()}
+                    {emp.nombre_empleado.substring(0, 2).toUpperCase()}
                   </Avatar>
                   <Box>
                     <Typography sx={{ fontWeight: 800 }}>

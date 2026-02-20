@@ -7,7 +7,8 @@ import {
   Close, AppRegistrationTwoTone, CategoryTwoTone,
   LayersTwoTone, StraightenTwoTone, PaletteTwoTone,
   RuleTwoTone, SaveTwoTone, SettingsSuggestTwoTone,
-  CheckCircleTwoTone
+  CheckCircleTwoTone,
+  QrCodeTwoTone
 } from '@mui/icons-material';
 import Swal from 'sweetalert2';
 import { createProducto, updateProducto } from '../../api/productosApi';
@@ -62,6 +63,7 @@ const Divider = ({ sx }) => <Box sx={{ borderBottom: '1px solid', ...sx }} />;
 const ProductoModal = ({ open, setOpen, fetchProductos, producto }) => {
   // --- TU LÓGICA ORIGINAL INTACTA ---
   const [form, setForm] = useState({
+    codigo: '',
     nombre_producto: '', tipo_producto: '', id_material: '',
     id_talla: '', id_color: '', id_unidadmedida: '', activo: true
   });
@@ -81,6 +83,7 @@ const ProductoModal = ({ open, setOpen, fetchProductos, producto }) => {
   useEffect(() => {
     if (producto) {
       setForm({
+        codigo: producto.codigo || '',
         nombre_producto: producto.nombre_producto || '',
         tipo_producto: producto.tipo_producto || '',
         id_material: producto.id_material || '',
@@ -91,6 +94,7 @@ const ProductoModal = ({ open, setOpen, fetchProductos, producto }) => {
       });
     } else {
       setForm({
+        codigo: '',
         nombre_producto: '', tipo_producto: '', id_material: '',
         id_talla: '', id_color: '', id_unidadmedida: '', activo: true
       });
@@ -99,9 +103,9 @@ const ProductoModal = ({ open, setOpen, fetchProductos, producto }) => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    const textFields = ['nombre_producto', 'tipo_producto'];
+    const textFields = ['codigo', 'nombre_producto', 'tipo_producto'];
     setForm(prev => {
-      const newValue = type === 'checkbox' ? checked : textFields.includes(name) ? value.toUpperCase() : value;
+      const newValue = type === 'checkbox' ? checked : textFields.includes(name) ? value.toUpperCase().replace(/\s/g, '') : value;
       const updatedForm = { ...prev, [name]: newValue };
       if (name === 'tipo_producto' && newValue === 'MP') updatedForm.id_talla = null;
       return updatedForm;
@@ -121,7 +125,7 @@ const ProductoModal = ({ open, setOpen, fetchProductos, producto }) => {
       buttonsStyling: true
     };
 
-    const required = ['nombre_producto', 'tipo_producto', 'id_material', 'id_unidadmedida'];
+    const required = ['codigo', 'nombre_producto', 'tipo_producto', 'id_material', 'id_unidadmedida'];
     
     // Alertas de Validación (Error/Warning)
     for (let f of required) { 
@@ -175,13 +179,16 @@ const ProductoModal = ({ open, setOpen, fetchProductos, producto }) => {
       });
 
     } catch (error) { 
-      Swal.fire({
-        ...swalConfig,
-        icon: 'error',
-        title: 'Fallo de Conexión',
-        text: 'No se pudo establecer comunicación con el servidor.',
-        confirmButtonColor: '#ef4444' // Rojo suave para errores críticos
-      }); 
+     // 2. MANEJO DE ERROR POR CÓDIGO DUPLICADO
+    const mensajeError = error.response?.data?.message || 'No se pudo establecer comunicación.';
+    
+    Swal.fire({
+      ...swalConfig,
+      icon: 'error',
+      title: 'Error de Registro',
+      text: mensajeError, // Mostrará: "El código ingresado ya pertenece a otro producto..."
+      confirmButtonColor: '#ef4444'
+    });
     }
   };
 
@@ -211,7 +218,20 @@ const ProductoModal = ({ open, setOpen, fetchProductos, producto }) => {
 
       {/* FORMULARIO */}
       <Box sx={{ p: 4, flexGrow: 1, overflowY: 'auto' }}>
-        
+      <BloqueCampo icon={QrCodeTwoTone} etiqueta="Código de Identificación">
+  <TextField 
+    fullWidth 
+    name="codigo"
+    value={form.codigo} 
+    onChange={handleChange} 
+    variant="standard"
+    placeholder="EJ: PROD-001"
+    InputProps={{ 
+      disableUnderline: true, 
+      sx: { fontWeight: 800, py: 0.5, color: '#6366f1', letterSpacing: 1 } 
+    }}
+  />
+</BloqueCampo>
         <BloqueCampo icon={AppRegistrationTwoTone} etiqueta="Nombre del Producto">
           <TextField 
             fullWidth 

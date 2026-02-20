@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { 
-    Box, TextField, MenuItem, Grid, Typography, 
+    Box, TextField, MenuItem, Grid, Typography, Autocomplete,
     Avatar, IconButton, Fade, Button, Container, Stack, Divider, Paper
 } from '@mui/material';
 import { 
@@ -166,22 +166,56 @@ const RecetaEditForm = ({ recetas, fetchRecetas }) => {
                                     <Stack spacing={4}>
                                         {items.map((item, index) => (
                                             <Stack key={index} direction={{ xs: 'column', sm: 'row' }} spacing={3} alignItems="flex-end">
-                                                <TextField
-                                                    select
-                                                    fullWidth
-                                                    label="Materia Prima"
-                                                    variant="standard"
-                                                    value={item.id_producto_material}
-                                                    onChange={(e) => handleChange(index, 'id_producto_material', e.target.value)}
-                                                    InputLabelProps={{ shrink: true }}
-                                                >
-                                                    {productos.filter(p => p.tipo_producto === 'MP').map((p) => (
-                                                        <MenuItem key={p.id_producto} value={p.id_producto}>
-                                                            {renderMateriaPrimaLabel(p.id_producto)}
-                                                        </MenuItem>
-                                                    ))}
-                                                </TextField>
+                               <Autocomplete
+  fullWidth
+  options={productos.filter(p => p.tipo_producto === 'MP')}
+  // Concatenamos Código, Nombre y Material para el input seleccionado
+  getOptionLabel={(p) => `${p.codigo} - ${p.nombre_producto} [${p.nombre_material || ''}]`}
+  value={productos.find(p => p.id_producto === item.id_producto_material) || null}
+  
+  onChange={(event, newValue) => {
+    handleChange(index, 'id_producto_material', newValue ? newValue.id_producto : '');
+  }}
 
+  // Filtra por los tres campos: Nombre, Código o Material
+  filterOptions={(options, state) => {
+    const query = state.inputValue.toLowerCase();
+    return options.filter(p => 
+      p.nombre_producto.toLowerCase().includes(query) || 
+      (p.codigo && p.codigo.toLowerCase().includes(query)) ||
+      (p.nombre_material && p.nombre_material.toLowerCase().includes(query))
+    );
+  }}
+
+  renderOption={(props, p) => (
+    <Box component="li" {...props} key={p.id_producto} sx={{ borderBottom: '1px solid #f1f5f9', py: 1 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#1e293b' }}>
+            {p.codigo}
+          </Typography>
+          <Typography variant="caption" sx={{ color: '#6366f1', fontWeight: 600 }}>
+            {p.nombre_material}
+          </Typography>
+        </Box>
+        <Typography variant="caption" sx={{ color: '#64748b' }}>
+          {p.nombre_producto} {p.nombre_color ? `| Color: ${p.nombre_color}` : ''}
+        </Typography>
+      </Box>
+    </Box>
+  )}
+
+  renderInput={(params) => (
+    <TextField
+      {...params}
+      label="Materia Prima"
+      variant="standard"
+      placeholder="Buscar por código, nombre o material..."
+      InputLabelProps={{ shrink: true }}
+    />
+  )}
+  noOptionsText="Materia prima no encontrada"
+/>
                                                 <TextField
                                                     label="Cantidad"
                                                     type="number"

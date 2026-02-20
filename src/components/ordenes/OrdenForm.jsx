@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { 
-    Box, TextField, MenuItem, Grid, Typography, 
+    Box, TextField, MenuItem, Grid, Typography, Autocomplete,
     Avatar, IconButton, Fade, Button, Container, Stack, Divider
 } from '@mui/material';
 import { 
@@ -22,7 +22,8 @@ const OrdenForm = () => {
         id_producto: '',
         id_empleado: '',
         cantidad_solicitada: '',
-        estado: 'pendiente'
+        estado: 'pendiente',
+        fecha_entrega_estimada: ''
     });
 
     useEffect(() => {
@@ -62,7 +63,23 @@ const OrdenForm = () => {
                 title: 'Debe seleccionar un producto válido'
             });
         }
-    
+        if (Number(formData.cantidad_solicitada) <= 0) {
+            return Swal.fire({
+                icon: 'warning',
+                title: 'Cantidad inválida',
+                text: 'La cantidad debe ser mayor a cero'
+            });
+        }
+        if (
+            id &&
+            formData.estado === "en_proceso" &&
+            !formData.fecha_entrega_estimada
+        ) {
+            return Swal.fire({
+                icon: 'warning',
+                title: 'Debe ingresar una fecha de entrega estimada'
+            });
+        }
         try {
             if (id) {
                 await updateOrden(id, formData);
@@ -77,10 +94,53 @@ const OrdenForm = () => {
             });
             navigate('/orden');
         } catch (error) {
-            Swal.fire({ icon: 'error', title: 'Error' });
+            if (error.response?.status === 400 && error.response?.data?.items) {
+                
+                const items = error.response.data.items;
+        
+                const detalle = items.map(i => `
+                    <div style="text-align:left; margin-bottom:8px;">
+                        <b>${i.producto}</b><br/>
+                        Necesario: ${i.necesario} <br/>
+                        Disponible: ${i.disponible}
+                    </div>
+                `).join('');
+        
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Stock insuficiente',
+                    html: `
+                        <div style="font-size:14px;">
+                            Algunos insumos no tienen disponibilidad suficiente:
+                            <br/><br/>
+                            ${detalle}
+                        </div>
+                    `,
+                    confirmButtonColor: '#0f172a'
+                });
+        
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error del sistema',
+                    text: error.response?.data?.message || 'Ocurrió un error inesperado',
+                    confirmButtonColor: '#0f172a'
+                });
+            }
         }
     };
-
+    const estadosPermitidos = {
+        pendiente: ["pendiente", "en_proceso", "cancelado"],
+        en_proceso: ["en_proceso", "completado", "cancelado"],
+        completado: ["completado"],
+        cancelado: ["cancelado"]
+    };
+    
+    const estadoActual = formData.estado;
+    
+    const ordenBloqueada =
+        estadoActual === "completado" || estadoActual === "cancelado";
+    
     return (
         <Box sx={{ 
             minHeight: '100vh', 
@@ -146,40 +206,61 @@ const OrdenForm = () => {
                                     </Stack>
                                     
                                     <Stack spacing={6}>
-                                    <TextField
-    select
-    fullWidth
-    label="Referencia del Producto"
-    value={formData.id_producto}
-    onChange={(e) => setFormData({...formData, id_producto: e.target.value})}
-    variant="standard"
-    required
-    sx={{ '& .MuiInput-root': { fontSize: '1.2rem', py: 1, fontWeight: 500 } }}
-    InputLabelProps={{ shrink: true, sx: { color: '#94a3b8', fontWeight: 600 } }}
->
-    {productos.length > 0 ? (
-        productos.map(p => (
-            <MenuItem key={p.id_producto} value={p.id_producto}>
-                <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                                    <Autocomplete
+    disabled={id && estadoActual !== "pendiente"}
+    options={productos}
+    getOptionLabel={(p) => p.nombre_completo || ""}
+    value={productos.find(p => p.id_producto === formData.id_producto) || null}
+    onChange={(event, newValue) => {
+        setFormData({ ...formData, id_producto: newValue ? newValue.id_producto : '' });
+    }}
+    // MODIFICACIÓN: Lógica de filtrado por Nombre, Código o Unidad
+    filterOptions={(options, state) => {
+        const query = state.inputValue.toLowerCase();
+        return options.filter(p => 
+            p.nombre_completo.toLowerCase().includes(query) || 
+            (p.codigo && p.codigo.toLowerCase().includes(query)) || // <--- FILTRO POR CÓDIGO
+            (p.nombre_unidad && p.nombre_unidad.toLowerCase().includes(query))
+        );
+    }}
+    renderOption={(props, p) => (
+        <Box component="li" {...props} key={p.id_producto} sx={{ borderBottom: '1px solid #f1f5f9' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Typography variant="body1" sx={{ fontWeight: 600 }}>
                         {p.nombre_completo}
                     </Typography>
-                    <Typography variant="caption" sx={{ color: '#64748b', fontStyle: 'italic' }}>
-                        {p.nombre_unidad ? `Unidad: ${p.nombre_unidad}` : ''}
+                    {/* MOSTRAMOS EL CÓDIGO A LA DERECHA */}
+                    <Typography variant="caption" sx={{ bgcolor: '#f1f5f9', px: 1, borderRadius: 1, fontWeight: 700, color: '#6366f1' }}>
+                        {p.codigo}
                     </Typography>
                 </Box>
-            </MenuItem>
-        ))
-    ) : (
-        <MenuItem disabled>No hay productos disponibles con receta</MenuItem>
+                <Typography variant="caption" sx={{ color: '#64748b', fontStyle: 'italic' }}>
+                    {p.nombre_unidad ? `Unidad: ${p.nombre_unidad}` : ''}
+                </Typography>
+            </Box>
+        </Box>
     )}
-</TextField>
+    renderInput={(params) => (
+        <TextField
+            {...params}
+            variant="standard"
+            label="Referencia del Producto"
+            required
+            placeholder="Buscar por código o nombre..."
+            sx={{ '& .MuiInput-root': { fontSize: '1.2rem', py: 1, fontWeight: 500 } }}
+            InputLabelProps={{ shrink: true, sx: { color: '#94a3b8', fontWeight: 600 } }}
+        />
+    )}
+    noOptionsText="No se encontraron coincidencias"
+/>
 
                                         <TextField
                                             fullWidth
                                             label="Unidades Requeridas"
                                             type="number"
                                             value={formData.cantidad_solicitada}
+                                            disabled={id && estadoActual !== "pendiente"}
                                             onChange={(e) => setFormData({...formData, cantidad_solicitada: e.target.value})}
                                             variant="standard"
                                             required
@@ -216,21 +297,52 @@ const OrdenForm = () => {
                                         </TextField>
 
                                         {id && (
-                                            <TextField
-                                                select
-                                                fullWidth
-                                                label="Estado Operativo"
-                                                value={formData.estado}
-                                                onChange={(e) => setFormData({...formData, estado: e.target.value})}
-                                                variant="standard"
-                                                sx={{ '& .MuiInput-root': { fontSize: '1.2rem', py: 1, fontWeight: 500 } }}
-                                                InputLabelProps={{ shrink: true, sx: { color: '#94a3b8', fontWeight: 600 } }}
-                                            >
-                                                <MenuItem value="pendiente">Pendiente</MenuItem>
-                                                <MenuItem value="en_proceso">En Proceso</MenuItem>
-                                                <MenuItem value="completado">Completado</MenuItem>
-                                            </TextField>
-                                        )}
+    <TextField
+        select
+        fullWidth
+        label="Estado Operativo"
+        value={formData.estado}
+        onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
+        variant="standard"
+        disabled={ordenBloqueada}
+        sx={{ '& .MuiInput-root': { fontSize: '1.2rem', py: 1, fontWeight: 500 } }}
+        InputLabelProps={{ shrink: true, sx: { color: '#94a3b8', fontWeight: 600 } }}
+    >
+        {estadosPermitidos[estadoActual]?.map((estado) => (
+            <MenuItem key={estado} value={estado}>
+                {estado.replace("_", " ").toUpperCase()}
+            </MenuItem>
+        ))}
+    </TextField>
+    
+)}
+{formData.estado === "en_proceso" && (
+    <TextField
+        fullWidth
+        type="date"
+        label="Fecha de Entrega Estimada"
+        value={formData.fecha_entrega_estimada || ""}
+        onChange={(e) =>
+            setFormData({ ...formData, fecha_entrega_estimada: e.target.value })
+        }
+        variant="standard"
+        required
+        disabled={ordenBloqueada}
+        InputLabelProps={{
+            shrink: true,
+            sx: { color: '#94a3b8', fontWeight: 600 }
+        }}
+        sx={{
+            '& .MuiInput-root': {
+                fontSize: '1.2rem',
+                py: 1,
+                fontWeight: 500
+            }
+        }}
+    />
+)}
+
+
                                     </Stack>
                                 </Grid>
 

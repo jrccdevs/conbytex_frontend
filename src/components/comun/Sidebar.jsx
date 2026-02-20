@@ -14,6 +14,19 @@ import ArchitectureTwoToneIcon from '@mui/icons-material/ArchitectureTwoTone'; /
 import CheckCircleTwoToneIcon from '@mui/icons-material/CheckCircleTwoTone'; // Icono PT
 
 // Iconos
+import StorefrontIcon from '@mui/icons-material/Storefront';
+import SyncAltIcon from '@mui/icons-material/SyncAlt';
+import BadgeIcon from '@mui/icons-material/Groups';
+import PrecisionManufacturingIcon from '@mui/icons-material/PrecisionManufacturing';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
+import ColorLensIcon from '@mui/icons-material/ColorLens';
+import WarehouseIcon from '@mui/icons-material/Warehouse';
+import ConstructionIcon from '@mui/icons-material/Construction';
+import StraightenIcon from '@mui/icons-material/Straighten';
+import ScaleIcon from '@mui/icons-material/Scale';
+
+
+
 import PeopleAltTwoToneIcon from '@mui/icons-material/PeopleAltTwoTone';
 
 import DashboardTwoToneIcon from '@mui/icons-material/DashboardTwoTone';
@@ -243,10 +256,11 @@ const Sidebar = ({ drawerWidth = 280 }) => {
                 }}
               >
                 <ListItemIcon sx={{ color: colors.textMuted, minWidth: 45 }}>
-                  <PeopleAltTwoToneIcon  />
+                  <SyncAltIcon  />
                 </ListItemIcon>
                 <ListItemText primary="Movimientos" primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 700 }} />
               </ListItemButton>
+
 
 
             )}
@@ -266,7 +280,7 @@ const Sidebar = ({ drawerWidth = 280 }) => {
                 }}
               >
                 <ListItemIcon sx={{ color: colors.textMuted, minWidth: 45 }}>
-                  <Inventory2TwoToneIcon />
+                  <StorefrontIcon />
                 </ListItemIcon>
                 <ListItemText primary="Productos" primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 700 }} />
               </ListItemButton>
@@ -290,10 +304,11 @@ const Sidebar = ({ drawerWidth = 280 }) => {
                 }}
               >
                 <ListItemIcon sx={{ color: colors.textMuted, minWidth: 45 }}>
-                  <PeopleAltTwoToneIcon  />
+                  <BadgeIcon  />
                 </ListItemIcon>
                 <ListItemText primary="Empleados" primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 700 }} />
               </ListItemButton>
+
 
 
             )}
@@ -312,9 +327,9 @@ const Sidebar = ({ drawerWidth = 280 }) => {
                 }}
               >
                 <ListItemIcon sx={{ color: colors.textMuted, minWidth: 45 }}>
-                  <Inventory2TwoToneIcon />
+                  <PrecisionManufacturingIcon />
                 </ListItemIcon>
-                <ListItemText primary="Ordenes" primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 700 }} />
+                <ListItemText primary="Ordenes de Produccion" primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 700 }} />
               </ListItemButton>
             )}
 
@@ -334,11 +349,10 @@ const Sidebar = ({ drawerWidth = 280 }) => {
                 }}
               >
                 <ListItemIcon sx={{ color: colors.textMuted, minWidth: 45 }}>
-                  <PeopleAltTwoToneIcon  />
+                  <MenuBookIcon  />
                 </ListItemIcon>
-                <ListItemText primary="Recetas" primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 700 }} />
+                <ListItemText primary="Recetas de Productos" primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 700 }} />
               </ListItemButton>
-
 
             )}
             {/* Roles y Permisos (Placeholder para siguiente módulo) */}
@@ -357,7 +371,7 @@ const Sidebar = ({ drawerWidth = 280 }) => {
                 }}
               >
                 <ListItemIcon sx={{ color: colors.textMuted, minWidth: 45 }}>
-                  <Inventory2TwoToneIcon />
+                  <ColorLensIcon />
                 </ListItemIcon>
                 <ListItemText primary="Colores" primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 700 }} />
               </ListItemButton>
@@ -379,10 +393,11 @@ const Sidebar = ({ drawerWidth = 280 }) => {
                 }}
               >
                 <ListItemIcon sx={{ color: colors.textMuted, minWidth: 45 }}>
-                  <Inventory2TwoToneIcon />
+                  <WarehouseIcon />
                 </ListItemIcon>
                 <ListItemText primary="Almacenes" primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 700 }} />
               </ListItemButton>
+
 
 
             )}
@@ -401,7 +416,7 @@ const Sidebar = ({ drawerWidth = 280 }) => {
                 }}
               >
                 <ListItemIcon sx={{ color: colors.textMuted, minWidth: 45 }}>
-                  <Inventory2TwoToneIcon />
+                  <ConstructionIcon />
                 </ListItemIcon>
                 <ListItemText primary="Materiales" primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 700 }} />
               </ListItemButton>
@@ -423,7 +438,7 @@ const Sidebar = ({ drawerWidth = 280 }) => {
                 }}
               >
                 <ListItemIcon sx={{ color: colors.textMuted, minWidth: 45 }}>
-                  <Inventory2TwoToneIcon />
+                  <StraightenIcon  />
                 </ListItemIcon>
                 <ListItemText primary="Tallas" primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 700 }} />
               </ListItemButton>
@@ -445,7 +460,7 @@ const Sidebar = ({ drawerWidth = 280 }) => {
                 }}
               >
                 <ListItemIcon sx={{ color: colors.textMuted, minWidth: 45 }}>
-                  <Inventory2TwoToneIcon />
+                  <ScaleIcon  />
                 </ListItemIcon>
                 <ListItemText primary="Unidad de Medida" primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 700 }} />
               </ListItemButton>

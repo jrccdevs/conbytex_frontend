@@ -36,9 +36,13 @@ const ProductosList = () => {
   useEffect(() => { fetchProductos(); }, []);
 
   useEffect(() => {
+    const term = search.toLowerCase();
     setFiltered(
       productos.filter(p =>
-        p.nombre_producto.toLowerCase().includes(search.toLowerCase())
+        // Busca en el nombre
+        p.nombre_producto.toLowerCase().includes(term) || 
+        // Busca en el código (asegurando que el código exista para evitar errores)
+        (p.codigo && p.codigo.toLowerCase().includes(term))
       )
     );
   }, [search, productos]);

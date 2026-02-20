@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { 
-    Box, TextField, MenuItem, Button, IconButton, 
+    Box, TextField, MenuItem, Button, IconButton, Autocomplete,
     Typography, Container, Paper, Stack, Divider, Grid, Avatar, Fade
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -133,7 +133,7 @@ const RecetaCreateForm = () => {
             <Box>
               <Box sx={{ mb: 6 }}>
                 <Typography variant="overline" sx={{ color: '#3b82f6', fontWeight: 800, letterSpacing: 2 }}>
-                  INGENIERÍA DE PRODUCTO
+                 
                 </Typography>
                 <Typography variant="h3" sx={{ fontWeight: 800, fontSize:40, letterSpacing: '-1.5px', mt: 1 }}>
                   Configurar Receta
@@ -146,24 +146,75 @@ const RecetaCreateForm = () => {
                   <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                     1. Producto Objetivo
                   </Typography>
-                  <TextField
-                    select
-                    fullWidth
-                    label="Seleccione Producto Terminado"
-                    value={productoFinal}
-                    onChange={(e) => setProductoFinal(e.target.value)}
-                    variant="outlined"
-                    sx={{ bgcolor: '#f8fafc' }}
-                  >
-                    <MenuItem value=""><em>Seleccione un producto</em></MenuItem>
-                    {productos
-                      .filter(p => p.tipo_producto === 'PT')
-                      .map(p => (
-                        <MenuItem key={p.id_producto} value={p.id_producto}>
-                          {p.nombre_producto}
-                        </MenuItem>
-                      ))}
-                  </TextField>
+                  <Autocomplete
+  fullWidth
+  options={productos.filter(p => p.tipo_producto === 'PT')}
+  
+  // 1. CONCATENACIÓN AL SELECCIONAR: Incluye el Color
+  getOptionLabel={(p) => 
+    `${p.codigo || ''} - ${p.nombre_producto || ''} [${p.nombre_material || ''}] ${p.nombre_color ? `| Color: ${p.nombre_color}` : ''} ${p.nombre_talla ? `- Talla: ${p.nombre_talla}` : ''}`
+  }
+  
+  value={productos.find(p => p.id_producto === productoFinal) || null}
+  onChange={(event, newValue) => {
+    setProductoFinal(newValue ? newValue.id_producto : "");
+  }}
+
+  // 2. FILTRADO: Ahora también busca por el nombre del color
+  filterOptions={(options, state) => {
+    const query = state.inputValue.toLowerCase();
+    return options.filter(p => 
+      (p.nombre_producto && p.nombre_producto.toLowerCase().includes(query)) || 
+      (p.codigo && p.codigo.toLowerCase().includes(query)) ||
+      (p.nombre_material && p.nombre_material.toLowerCase().includes(query)) ||
+      (p.nombre_color && p.nombre_color.toLowerCase().includes(query)) || // <--- FILTRO POR COLOR
+      (p.nombre_talla && p.nombre_talla.toLowerCase().includes(query))
+    );
+  }}
+
+  renderOption={(props, p) => (
+    <Box component="li" {...props} key={p.id_producto} sx={{ borderBottom: '1px solid #f1f5f9' }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+            {p.codigo}
+          </Typography>
+          <Stack direction="row" spacing={1}>
+            {/* Badge de Color */}
+            {p.nombre_color && (
+              <Typography variant="caption" sx={{ bgcolor: '#f1f5f9', color: '#475569', px: 1, borderRadius: 1, fontWeight: 700, border: '1px solid #e2e8f0' }}>
+                {p.nombre_color}
+              </Typography>
+            )}
+            <Typography variant="caption" sx={{ bgcolor: '#e0e7ff', color: '#4338ca', px: 1, borderRadius: 1, fontWeight: 700 }}>
+              {p.nombre_material}
+            </Typography>
+            {p.nombre_talla && (
+              <Typography variant="caption" sx={{ bgcolor: '#fef3c7', color: '#92400e', px: 1, borderRadius: 1, fontWeight: 700 }}>
+                Talla: {p.nombre_talla}
+              </Typography>
+            )}
+          </Stack>
+        </Box>
+        <Typography variant="caption" sx={{ color: '#64748b', mt: 0.5 }}>
+          {p.nombre_producto}
+        </Typography>
+      </Box>
+    </Box>
+  )}
+
+  renderInput={(params) => (
+    <TextField
+      {...params}
+      label="Seleccione Producto Terminado"
+      variant="outlined"
+      placeholder="Buscar por código, nombre, color, material o talla..."
+      sx={{ bgcolor: '#f8fafc' }}
+      InputLabelProps={{ shrink: true }}
+    />
+  )}
+  noOptionsText="No se encontraron coincidencias"
+/>
                 </Box>
 
                 <Divider />
@@ -198,23 +249,63 @@ const RecetaCreateForm = () => {
                           alignItems: 'center' 
                         }}
                       >
-                        <TextField
-                          select
-                          label="Materia Prima"
-                          value={item.id_producto_material}
-                          onChange={(e) => handleChange(index, 'id_producto_material', e.target.value)}
-                          fullWidth
-                          size="small"
-                        >
-                          <MenuItem value=""><em>Seleccionar material</em></MenuItem>
-                          {productos
-                            .filter(p => p.tipo_producto === 'MP')
-                            .map(p => (
-                              <MenuItem key={p.id_producto} value={p.id_producto}>
-                                {renderMateriaPrimaLabel(p)}
-                              </MenuItem>
-                            ))}
-                        </TextField>
+                       <Autocomplete
+  fullWidth
+  size="small"
+  // Filtramos para mostrar solo Materia Prima
+  options={productos.filter(p => p.tipo_producto === 'MP')}
+  
+  // Lo que se muestra en el input al seleccionar (Código - Nombre [Material])
+  getOptionLabel={(p) => `${p.codigo || ''} - ${p.nombre_producto || ''} [${p.nombre_material || ''}]`}
+  
+  // Buscamos el objeto basado en el ID guardado en item.id_producto_material
+  value={productos.find(p => p.id_producto === item.id_producto_material) || null}
+
+  // Usamos tu función handleChange original
+  onChange={(event, newValue) => {
+    handleChange(index, 'id_producto_material', newValue ? newValue.id_producto : '');
+  }}
+
+  // FILTRADO INTELIGENTE: Por Nombre, Código o Material
+  filterOptions={(options, state) => {
+    const query = state.inputValue.toLowerCase();
+    return options.filter(p => 
+      (p.nombre_producto && p.nombre_producto.toLowerCase().includes(query)) || 
+      (p.codigo && p.codigo.toLowerCase().includes(query)) ||
+      (p.nombre_material && p.nombre_material.toLowerCase().includes(query))
+    );
+  }}
+
+  // DISEÑO DE LA LISTA DESPLEGABLE
+  renderOption={(props, p) => (
+    <Box component="li" {...props} key={p.id_producto} sx={{ borderBottom: '1px solid #f1f5f9' }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+            {p.codigo}
+          </Typography>
+          <Typography variant="caption" sx={{ color: '#6366f1', fontWeight: 800, textTransform: 'uppercase' }}>
+            {p.nombre_material}
+          </Typography>
+        </Box>
+        <Typography variant="caption" sx={{ color: '#64748b' }}>
+          {p.nombre_producto} {p.nombre_color ? `| Color: ${p.nombre_color}` : ''}
+        </Typography>
+      </Box>
+    </Box>
+  )}
+
+  renderInput={(params) => (
+    <TextField
+      {...params}
+      label="Materia Prima"
+      placeholder="Buscar por nombre, código o material..."
+      // Si quieres mantener el estilo anterior, puedes agregar variant="standard" aquí
+      InputLabelProps={{ shrink: true }}
+    />
+  )}
+  noOptionsText="No se encontraron coincidencias"
+/>
 
                         <TextField
                           label="Cant."

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { 
     Box, Button, Typography, Paper, Grid, Stack, IconButton, 
-    TextField, MenuItem, Avatar, Divider, Chip, Fade
+    TextField, Autocomplete, MenuItem, Avatar, Divider, Chip, Fade
 } from '@mui/material';
 import { 
     Close, Add, Remove, SyncAlt, Save, 
@@ -114,14 +114,39 @@ const MovimientoForm = () => {
 
                             <Divider />
 
-                            <TextField
-                                select fullWidth label="Producto"
-                                value={formData.id_producto}
-                                onChange={(e) => setFormData({ ...formData, id_producto: e.target.value })}
-                                InputProps={{ startAdornment: <Inventory2 sx={{ mr: 1, color: 'action.active' }} /> }}
-                            >
-                                {productos.map(p => <MenuItem key={p.id_producto} value={p.id_producto}>{p.nombre_producto}</MenuItem>)}
-                            </TextField>
+                            <Autocomplete
+  options={productos}
+  getOptionLabel={(p) => `${p.codigo} - ${p.nombre_producto} (${p.nombre_material} / ${p.nombre_color})`}
+  value={productos.find(p => p.id_producto === formData.id_producto) || null}
+  onChange={(event, newValue) => {
+    setFormData({ ...formData, id_producto: newValue ? newValue.id_producto : '' });
+  }}
+  // Esto permite que el usuario busque por código o nombre
+  filterOptions={(options, state) => {
+    const display = state.inputValue.toLowerCase();
+    return options.filter(p => 
+      p.nombre_producto.toLowerCase().includes(display) || 
+      p.codigo.toLowerCase().includes(display)
+    );
+  }}
+  renderInput={(params) => (
+    <TextField
+      {...params}
+      label="Buscar Producto (Código o Nombre)"
+      InputProps={{
+        ...params.InputProps,
+        startAdornment: (
+          <>
+            <Inventory2 sx={{ mr: 1, color: 'action.active' }} />
+            {params.InputProps.startAdornment}
+          </>
+        ),
+      }}
+    />
+  )}
+  // Mejora el rendimiento con listas largas
+  noOptionsText="No se encontraron coincidencias"
+/>
 
                             <TextField
                                 select fullWidth label="Almacén"

@@ -157,6 +157,21 @@ const OrdenDetail = () => {
                             </Box>
                         </Stack>
                     </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                            <CalendarTodayIcon color="secondary" />
+                            <Box>
+                                <Typography variant="caption" color="text.secondary" display="block">
+                                    FECHA DE ENTREGA
+                                </Typography>
+                                <Typography variant="subtitle1" fontWeight="bold">
+                                    {orden.fecha_entrega_estimada
+                                        ? new Date(orden.fecha_entrega_estimada).toLocaleDateString()
+                                        : 'No definida'}
+                                </Typography>
+                            </Box>
+                        </Stack>
+                    </Grid>
                 </Grid>
 
                 {/* TABLA DE EXPLOSIÓN DE MATERIALES */}

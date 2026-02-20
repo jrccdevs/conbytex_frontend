@@ -95,7 +95,7 @@ const AlmacenTable = ({ almacenes, onEdit, onDelete }) => {
                     fontSize: '1rem',
                     fontWeight: 700
                   }}>
-                    {a.nombre_almacen.charAt(0).toUpperCase()}
+                    {a.nombre_almacen.substring(0, 2).toUpperCase()}
                   </Avatar>
                   <Typography variant="body2" sx={{ fontWeight: 700, color: '#1e293b' }}>
                     {a.nombre_almacen}

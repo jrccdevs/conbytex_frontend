@@ -2,7 +2,7 @@ import React from 'react';
 import {
   Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Paper, IconButton, Chip,
-  Box, Typography, Avatar, Tooltip, Zoom
+  Box, Typography, Avatar, Tooltip, Zoom, Stack
 } from '@mui/material';
 import {
   EditTwoTone,
@@ -14,31 +14,18 @@ import {
   LayersTwoTone,
   CheckCircleTwoTone,
   CancelTwoTone,
-  SettingsSuggestTwoTone
+  SettingsSuggestTwoTone,
+  QrCodeTwoTone // Nuevo Icono para Código
 } from '@mui/icons-material';
 
 import { useAuth } from '../../context/AuthContext';
 
 const ProductoTable = ({ productos, onEdit, onDelete }) => {
-
   const { usuario } = useAuth();
   const user = usuario?.user ?? usuario;
-
   const isAdmin = user?.roles?.some(r => r.slug === 'admin');
-
-  const canEdit =
-    isAdmin || user?.permissions?.some(p => p.slug === 'productos.edit');
-
-  const canDelete =
-    isAdmin || user?.permissions?.some(p => p.slug === 'productos.delete');
-
-  // Debug (puedes quitar luego)
-  console.log('👤 Usuario en EmpleadoTable:', user);
-  console.log('🛡️ Roles:', user?.roles);
-  console.log('🔐 Permisos:', user?.permissions);
-  console.log('✏️ canEdit:', canEdit, '🗑️ canDelete:', canDelete);
-
-
+  const canEdit = isAdmin || user?.permissions?.some(p => p.slug === 'productos.edit');
+  const canDelete = isAdmin || user?.permissions?.some(p => p.slug === 'productos.delete');
 
   return (
     <TableContainer 
@@ -55,7 +42,8 @@ const ProductoTable = ({ productos, onEdit, onDelete }) => {
       <Table sx={{ minWidth: 1000 }}>
         <TableHead sx={{ bgcolor: '#0f172a' }}>
           <TableRow>
-            <TableCell sx={{ color: '#f8fafc', fontWeight: 700, py: 3 }}>PRODUCTO</TableCell>
+            {/* Agregamos visualmente el concepto de Código en el Header */}
+            <TableCell sx={{ color: '#f8fafc', fontWeight: 700, py: 3 }}>PRODUCTO / CÓDIGO</TableCell>
             <TableCell sx={{ color: '#f8fafc', fontWeight: 700 }}>ESPECIFICACIONES</TableCell>
             <TableCell sx={{ color: '#f8fafc', fontWeight: 700 }}>ATRIBUTOS</TableCell>
             <TableCell sx={{ color: '#f8fafc', fontWeight: 700 }}>ESTADO</TableCell>
@@ -72,28 +60,42 @@ const ProductoTable = ({ productos, onEdit, onDelete }) => {
                 borderBottom: '1px solid #f1f5f9'
               }}
             >
-              {/* Columna Principal: Info Producto */}
+              {/* Columna Principal: Info Producto + CÓDIGO */}
               <TableCell>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                   <Avatar 
                     variant="rounded" 
                     sx={{ 
-                      width: 48, 
-                      height: 48, 
+                      width: 52, 
+                      height: 52, 
                       bgcolor: p.activo ? '#eff6ff' : '#f1f5f9',
                       color: p.activo ? '#3b82f6' : '#94a3b8',
                       borderRadius: '14px',
-                      border: '1px solid' + (p.activo ? '#dbeafe' : '#e2e8f0')
+                      border: '1px solid ' + (p.activo ? '#dbeafe' : '#e2e8f0')
                     }}
                   >
                     <Inventory2TwoTone />
                   </Avatar>
                   <Box>
-                    <Typography sx={{ fontWeight: 800, color: '#1e293b', fontSize: '0.95rem', lineHeight: 1 }}>
+                    {/* Visualización del CÓDIGO con un estilo tipo "Badge" */}
+                    <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+                        <QrCodeTwoTone sx={{ fontSize: 14, color: '#6366f1' }} />
+                        <Typography sx={{ 
+                            fontWeight: 900, 
+                            color: '#6366f1', 
+                            fontSize: '0.7rem', 
+                            letterSpacing: '1px',
+                            textTransform: 'uppercase'
+                        }}>
+                          {p.codigo || 'SIN CÓDIGO'}
+                        </Typography>
+                    </Stack>
+                    
+                    <Typography sx={{ fontWeight: 800, color: '#1e293b', fontSize: '0.95rem', lineHeight: 1.2 }}>
                       {p.nombre_producto}
                     </Typography>
-                    <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>
-                      ID: #{p.id_producto.toString().padStart(5, '0')}
+                    <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 600 }}>
+                      ID Interno: #{p.id_producto.toString().padStart(5, '0')}
                     </Typography>
                   </Box>
                 </Box>
@@ -142,7 +144,7 @@ const ProductoTable = ({ productos, onEdit, onDelete }) => {
                 </Typography>
               </TableCell>
 
-              {/* Columna: Estado con Pulso Visual */}
+              {/* Columna: Estado */}
               <TableCell>
                 <Chip
                   label={p.activo ? 'OPERATIVO' : 'SUSPENDIDO'}
@@ -160,7 +162,7 @@ const ProductoTable = ({ productos, onEdit, onDelete }) => {
                 />
               </TableCell>
 
-              {/* Acciones de Control */}
+              {/* Acciones */}
               <TableCell align="right">
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1.5, pr: 2 }}>
                 {canEdit && (

@@ -5,6 +5,7 @@ import ProductosList from './pages/productos/ProductosList';
 import ProductoForm from './components/productos/ProductoModal';
 
 import EmpleadosList from './pages/empleados/EmpleadosList';
+import ClientesList from './pages/clientes/ClientesList';
 import OrdenList from './pages/ordenes/OrdenList';
 import OrdenForm from './components/ordenes/OrdenForm';
 import OrdenDetail from './pages/ordenes/OrdenDetail';
@@ -189,12 +190,12 @@ function App() {
   <Route path="/inventario/producto-terminado" element={<ProductoTerminadoPage />} />
 </Route>
 /************************************************************************/
-{/* 1. Lista de Movimientos - Permiso: movimientos.view */}
+{/* 1. Lista de clor - Permiso: clor.view */}
 <Route element={<ProtectedRoute permisoRequerido="color.view" />}>
   <Route path="/color" element={<ColorList />} />
 </Route>
 
-{/* 2. Formulario para nuevo movimiento - Permiso: movimientos.create */}
+{/* 2. Formulario para nuevo color - Permiso: movimientos.create */}
 <Route element={<ProtectedRoute permisoRequerido="color.create" />}>
   <Route path="/color/nuevo" element={<ColorForm />} />
 </Route>
@@ -204,7 +205,7 @@ function App() {
   <Route path="/color/:id" element={<ColorForm />} />
 </Route>
 /***************************************************************************/
-{/* 1. Lista de Movimientos - Permiso: movimientos.view */}
+{/* 1. Lista de almacen - Permiso: movimientos.view */}
 <Route element={<ProtectedRoute permisoRequerido="almacen.view" />}>
   <Route path="/almacen" element={<AlmacenList />} />
 </Route>
@@ -219,7 +220,7 @@ function App() {
   <Route path="/almacen/:id" element={<AlmacenForm />} />
 </Route>
 /******************************************************************************/
-{/* 1. Lista de Movimientos - Permiso: movimientos.view */}
+{/* 1. Lista de Material - Permiso: movimientos.view */}
 <Route element={<ProtectedRoute permisoRequerido="material.view" />}>
   <Route path="/material" element={<MaterialList />} />
 </Route>
@@ -234,7 +235,7 @@ function App() {
   <Route path="/material/:id" element={<MaterialForm />} />
 </Route>
 /*******************************************************************************/
-{/* 1. Lista de Movimientos - Permiso: movimientos.view */}
+{/* 1. Lista de Tallas - Permiso: movimientos.view */}
 <Route element={<ProtectedRoute permisoRequerido="size.view" />}>
   <Route path="/size" element={<SizeList />} />
 </Route>
@@ -249,7 +250,7 @@ function App() {
   <Route path="/size/:id" element={<SizeForm />} />
 </Route>
 /*********************************************************************************/
-{/* 1. Lista de Movimientos - Permiso: movimientos.view */}
+{/* 1. Lista de Unidad de medida - Permiso: movimientos.view */}
 <Route element={<ProtectedRoute permisoRequerido="unidad.view" />}>
   <Route path="/unidad" element={<UnidadList />} />
 </Route>
@@ -262,6 +263,19 @@ function App() {
 {/* 3. Ver detalle de un movimiento específico - color: movimientos.view */}
 <Route element={<ProtectedRoute permisoRequerido="unidad.view" />}>
   <Route path="/unidad/:id" element={<UnidadForm />} />
+</Route>
+/**********************************************************************************/
+{/* Listar clientes */}
+<Route element={<ProtectedRoute permisoRequerido="clientes.view" />}>
+  <Route path="/clientes" element={<ClientesList />} />
+</Route>
+{/* Crear clientes */}
+<Route element={<ProtectedRoute permisoRequerido="clientes.create" />}>
+  <Route path="/clientes/nuevo" element={<ClientesList />} />
+</Route>
+{/* Editar clientes */}
+<Route element={<ProtectedRoute permisoRequerido="clientes.edit" />}>
+  <Route path="/clientes/editar/:id" element={<ClientesList />} />
 </Route>
         </Route>
       </Route>

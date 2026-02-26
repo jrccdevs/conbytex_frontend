@@ -12,12 +12,11 @@ import {
   Divider,
   Container,
   TextField,
-  InputAdornment,
   IconButton,
-  Collapse,
   Chip,
   Avatar,
-  FormControlLabel
+  Fade,
+  Tooltip
 } from '@mui/material';
 
 import { useParams, useNavigate } from 'react-router-dom';
@@ -27,8 +26,6 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import SecurityIcon from '@mui/icons-material/Security';
 import LockIcon from '@mui/icons-material/Lock';
 import SearchIcon from '@mui/icons-material/Search';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import HubIcon from '@mui/icons-material/Hub';
 import Swal from 'sweetalert2';
@@ -57,6 +54,8 @@ const AsignacionSeguridad = () => {
   const [permisosMaestros, setPermisosMaestros] = useState({});
   const [rolSeleccionado, setRolSeleccionado] = useState(null);
   const [busqueda, setBusqueda] = useState('');
+  
+  // Mantenemos el estado aunque ya no usemos Collapse para no romper referencias
   const [expanded, setExpanded] = useState({});
 
   const [permisosBaseRol, setPermisosBaseRol] = useState([]);
@@ -70,7 +69,15 @@ const AsignacionSeguridad = () => {
       try {
         const [rolesRes, permisosRes] = await Promise.all([getRoles(), getPermissionsList()]);
         setRoles(rolesRes.roles || []);
-        setPermisosMaestros(agruparPermisosPorModulo(permisosRes.permissions || []));
+        
+        // Ordenar módulos alfabéticamente al agrupar
+        const agrupados = agruparPermisosPorModulo(permisosRes.permissions || []);
+        const ordenados = Object.keys(agrupados).sort().reduce((acc, key) => {
+            acc[key] = agrupados[key].sort((a, b) => a.name.localeCompare(b.name));
+            return acc;
+        }, {});
+        
+        setPermisosMaestros(ordenados);
       } catch (error) { console.error(error); } 
       finally { setLoading(false); }
     };
@@ -110,16 +117,13 @@ const AsignacionSeguridad = () => {
     );
   };
 
-  // LÓGICA DE MARCAR TODO POR MÓDULO
   const handleToggleTodoModulo = (modulo) => {
     const permisosModulo = permisosMaestros[modulo].map(p => p.id);
     const todosSeleccionados = permisosModulo.every(id => permisosBaseRol.includes(id) || permisosDirectos.includes(id));
 
     if (todosSeleccionados) {
-      // Desmarcar solo los que son directos (los de rol están bloqueados)
       setPermisosDirectos(prev => prev.filter(id => !permisosModulo.includes(id)));
     } else {
-      // Marcar todos los que falten y no estén en el rol base
       const nuevosDirectos = permisosModulo.filter(id => !permisosBaseRol.includes(id) && !permisosDirectos.includes(id));
       setPermisosDirectos(prev => [...prev, ...nuevosDirectos]);
     }
@@ -130,158 +134,195 @@ const AsignacionSeguridad = () => {
     try {
       setSaving(true);
       await assignRolesToUser({ userId: id, role_id: rolSeleccionado.id, permission_ids: permisosDirectos });
-      Swal.fire('Configuración Exitosa', 'Acceso actualizado', 'success').then(() => navigate('/usuarios'));
+      Swal.fire({
+        title: 'Configuración Exitosa',
+        text: 'Acceso actualizado correctamente',
+        icon: 'success',
+        confirmButtonColor: '#0ea5e9'
+      }).then(() => navigate('/usuarios'));
     } catch (error) { Swal.fire('Error', 'No se pudo guardar', 'error'); } 
     finally { setSaving(false); }
   };
 
-  if (loading) return <Box sx={{ display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center', bgcolor: '#020617' }}><CircularProgress color="primary" /></Box>;
+  if (loading) return (
+    <Box sx={{ display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center', bgcolor: '#f8fafc' }}>
+        <Stack spacing={2} alignItems="center">
+            <CircularProgress size={60} thickness={4} sx={{ color: '#0f172a' }} />
+            <Typography variant="overline" color="text.secondary">Cargando Bóveda de Seguridad...</Typography>
+        </Stack>
+    </Box>
+  );
 
   return (
-    <Box sx={{ bgcolor: '#f8fafc', minHeight: '100vh', pb: 10 }}>
-      {/* HEADER FUTURISTA */}
+    <Box sx={{ bgcolor: '#f1f5f9', minHeight: '100vh', pb: 10 }}>
+      {/* HEADER TIPO DASHBOARD */}
       <Box sx={{ 
-        background: 'linear-gradient(135deg, #020617 0%, #0f172a 100%)', 
-        color: 'white', pt: 6, pb: 12, boxShadow: '0 10px 30px rgba(0,0,0,0.2)' 
+        bgcolor: '#0f172a', 
+        color: 'white', pt: 4, pb: 8, 
+        borderBottom: '4px solid #0ea5e9'
       }}>
-        <Container maxWidth="lg">
-          <Stack direction="row" justifyContent="space-between" alignItems="center">
-            <IconButton onClick={() => navigate('/usuarios')} sx={{ color: 'white', border: '1px solid rgba(255,255,255,0.2)' }}>
-              <ArrowBackIosNewIcon />
-            </IconButton>
-            <Typography variant="h4" fontWeight={900} sx={{ letterSpacing: -1 }}>
-            
-            </Typography>
+        <Container maxWidth="xl">
+          <Stack direction={{ xs: 'column', md: 'row' }} spacing={3} justifyContent="space-between" alignItems="center">
+            <Stack direction="row" spacing={2} alignItems="center">
+              <IconButton onClick={() => navigate('/usuarios')} sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.1)', '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' } }}>
+                <ArrowBackIosNewIcon fontSize="small" />
+              </IconButton>
+              <Box>
+                <Typography variant="h5" fontWeight={900} sx={{ letterSpacing: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <SecurityIcon sx={{ color: '#0ea5e9' }} /> GESTIÓN DE ACCESOS
+                </Typography>
+                <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 600 }}>ID USUARIO: {id}</Typography>
+              </Box>
+            </Stack>
+
+            <Paper sx={{ 
+              display: 'flex', alignItems: 'center', px: 2, py: 0.5,
+              width: { xs: '100%', md: '450px' }, bgcolor: 'rgba(255,255,255,0.05)', 
+              borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)'
+            }}>
+              <SearchIcon sx={{ color: '#0ea5e9', mr: 1 }} />
+              <TextField
+                fullWidth variant="standard"
+                placeholder="Filtrar por nombre de permiso o módulo..."
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+                InputProps={{ disableUnderline: true, sx: { color: 'white', fontSize: '0.95rem' } }}
+              />
+            </Paper>
+
             <Button
               variant="contained"
               onClick={handleGuardar}
               disabled={!rolSeleccionado || saving}
               startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
-              sx={{ bgcolor: '#38bdf8', color: '#0f172a', fontWeight: 900, borderRadius: '12px', '&:hover': { bgcolor: '#7dd3fc' } }}
+              sx={{ 
+                bgcolor: '#0ea5e9', color: 'white', fontWeight: 800, px: 4, py: 1.5,
+                borderRadius: '8px', boxShadow: '0 4px 14px 0 rgba(14, 165, 233, 0.39)',
+                '&:hover': { bgcolor: '#0284c7' }
+              }}
             >
-              GUARDAR
+              GUARDAR CAMBIOS
             </Button>
           </Stack>
-
-          {/* BUSCADOR FUTURISTA */}
-          <Box sx={{ mt: 5, position: 'relative' }}>
-            <Paper sx={{ 
-              display: 'flex', alignItems: 'center', p: 1,
-              background: 'rgba(255, 255, 255, 0.05)',
-              backdropFilter: 'blur(12px)',
-              borderRadius: '20px',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              boxShadow: '0 0 20px rgba(56, 189, 248, 0.2)'
-            }}>
-              <SearchIcon sx={{ color: '#38bdf8', ml: 2, mr: 1 }} />
-              <TextField
-                fullWidth
-                variant="standard"
-                placeholder="Escaneando base de permisos..."
-                value={busqueda}
-                onChange={(e) => setBusqueda(e.target.value)}
-                InputProps={{ 
-                  disableUnderline: true, 
-                  sx: { color: 'white', fontSize: '1.2rem', py: 1 } 
-                }}
-              />
-              
-            </Paper>
-          </Box>
         </Container>
       </Box>
 
-      <Container maxWidth="lg" sx={{ mt: -6 }}>
-        {/* ROLES CENTRADOS CON SWITCHES */}
-        <Card sx={{ p: 4, borderRadius: '24px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)', mb: 6 }}>
-          <Typography variant="h6" textAlign="center" fontWeight={800} sx={{ mb: 3, color: '#1e293b' }}>
-            PERFIL DE AUTORIZACIÓN
-          </Typography>
-          <Grid container spacing={2} justifyContent="center">
-            {roles.map((rol) => (
-              <Grid item key={rol.id}>
-                <Paper variant="outlined" sx={{ 
-                  p: 1, pr: 2, borderRadius: '15px', 
-                  borderColor: rolSeleccionado?.id === rol.id ? '#38bdf8' : '#e2e8f0',
-                  bgcolor: rolSeleccionado?.id === rol.id ? '#f0f9ff' : 'white',
-                  transition: '0.3s'
-                }}>
-                  <FormControlLabel
-                    control={
-                      <Switch 
-                        checked={rolSeleccionado?.id === rol.id} 
-                        onChange={() => handleSeleccionarRol(rol)}
-                      />
-                    }
-                    label={<Typography fontWeight={700} fontSize="0.85rem">{rol.name.toUpperCase()}</Typography>}
-                  />
-                </Paper>
-              </Grid>
-            ))}
-          </Grid>
+      <Container maxWidth="xl" sx={{ mt: -4 }}>
+        {/* SELECTOR DE ROL PRINCIPAL */}
+        <Card sx={{ p: 3, mb: 4, borderRadius: '16px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0' }}>
+            <Typography variant="subtitle2" color="text.secondary" fontWeight={800} sx={{ mb: 2, textAlign: 'center', textTransform: 'uppercase' }}>
+                Selecciona el Perfil Base
+            </Typography>
+            <Stack direction="row" spacing={2} justifyContent="center" flexWrap="wrap" useFlexGap>
+                {roles.map((rol) => (
+                    <Chip
+                        key={rol.id}
+                        avatar={<Avatar sx={{ bgcolor: rolSeleccionado?.id === rol.id ? '#fff' : '#0ea5e9', color: rolSeleccionado?.id === rol.id ? '#0ea5e9' : '#fff' }}>{rol.name.charAt(0)}</Avatar>}
+                        label={rol.name.toUpperCase()}
+                        onClick={() => handleSeleccionarRol(rol)}
+                        sx={{ 
+                            p: 2.5, fontWeight: 800, fontSize: '0.85rem',
+                            bgcolor: rolSeleccionado?.id === rol.id ? '#0ea5e9' : '#fff',
+                            color: rolSeleccionado?.id === rol.id ? '#fff' : '#475569',
+                            border: '1px solid #e2e8f0',
+                            transition: 'all 0.3s ease',
+                            '&:hover': { bgcolor: rolSeleccionado?.id === rol.id ? '#0284c7' : '#f1f5f9' }
+                        }}
+                    />
+                ))}
+            </Stack>
         </Card>
 
-        {/* MATRIZ DE PERMISOS */}
+        {/* MATRIZ DE PERMISOS EXPANDIDA POR DEFECTO */}
         {rolSeleccionado && (
           <Grid container spacing={3}>
             {Object.keys(permisosMaestros).map((modulo) => {
-              const filtrados = permisosMaestros[modulo].filter(p => p.name.toLowerCase().includes(busqueda.toLowerCase()));
+              const filtrados = permisosMaestros[modulo].filter(p => 
+                p.name.toLowerCase().includes(busqueda.toLowerCase()) || 
+                modulo.toLowerCase().includes(busqueda.toLowerCase())
+              );
               if (filtrados.length === 0) return null;
               
-              const isExpanded = expanded[modulo] || busqueda.length > 0;
               const permisosModuloIds = filtrados.map(p => p.id);
               const todosSeleccionados = permisosModuloIds.every(id => permisosBaseRol.includes(id) || permisosDirectos.includes(id));
 
               return (
-                <Grid item xs={12} md={6} key={modulo}>
-                  <Card sx={{ borderRadius: '20px', border: '1px solid #f1f5f9', overflow: 'hidden' }}>
-                    <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: '#f8fafc' }}>
-                      <Stack direction="row" spacing={1.5} alignItems="center">
-                        <IconButton size="small" onClick={() => setExpanded(prev => ({ ...prev, [modulo]: !isExpanded }))} sx={{ color: '#1e3a8a' }}>
-                          {isExpanded ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                        </IconButton>
-                        <Typography variant="subtitle1" fontWeight={900} color="#1e3a8a">{modulo.toUpperCase()}</Typography>
-                      </Stack>
-                      
-                      <Button 
-                        size="small" 
-                        startIcon={<DoneAllIcon />}
-                        onClick={() => handleToggleTodoModulo(modulo)}
-                        sx={{ color: todosSeleccionados ? '#059669' : '#64748b', textTransform: 'none', fontWeight: 700 }}
-                      >
-                        {todosSeleccionados ? 'Completo' : 'Marcar Todo'}
-                      </Button>
-                    </Box>
+                <Grid item xs={12} sm={6} lg={4} xl={3} key={modulo}>
+                  <Fade in timeout={600}>
+                    <Card sx={{ 
+                        height: '100%', display: 'flex', flexDirection: 'column',
+                        borderRadius: '16px', border: '1px solid #e2e8f0',
+                        overflow: 'hidden', transition: '0.3s',
+                        '&:hover': { boxShadow: '0 12px 20px rgba(0,0,0,0.08)' }
+                    }}>
+                        <Box sx={{ 
+                            p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
+                            bgcolor: todosSeleccionados ? '#f0fdf4' : '#f8fafc',
+                            borderBottom: '1px solid #e2e8f0'
+                        }}>
+                            <Stack direction="row" spacing={1} alignItems="center">
+                                <AdminPanelSettingsIcon sx={{ color: '#64748b' }} />
+                                <Typography variant="subtitle2" fontWeight={900} color="#0f172a">
+                                    {modulo.toUpperCase()}
+                                </Typography>
+                            </Stack>
+                            
+                            <Tooltip title="Marcar todos los de este módulo">
+                                <IconButton 
+                                    size="small" 
+                                    onClick={() => handleToggleTodoModulo(modulo)}
+                                    sx={{ color: todosSeleccionados ? '#16a34a' : '#94a3b8' }}
+                                >
+                                    <DoneAllIcon fontSize="small" />
+                                </IconButton>
+                            </Tooltip>
+                        </Box>
 
-                    <Collapse in={isExpanded}>
-                      <Divider />
-                      <Box sx={{ p: 1 }}>
-                        {filtrados.map(p => {
-                          const esRol = permisosBaseRol.includes(p.id);
-                          const esDirecto = permisosDirectos.includes(p.id);
-                          return (
-                            <Box key={p.id} sx={{ 
-                              display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
-                              p: 1.5, borderRadius: '12px', mb: 0.5,
-                              bgcolor: esRol ? '#f8fafc' : 'transparent',
-                              '&:hover': { bgcolor: '#f1f5f9' }
-                            }}>
-                              <Stack direction="row" spacing={1.5} alignItems="center">
-                                {esRol ? <LockIcon sx={{ fontSize: 16, color: '#cbd5e1' }} /> : <HubIcon sx={{ fontSize: 16, color: '#38bdf8' }} />}
-                                <Typography variant="body2" sx={{ color: esRol ? '#94a3b8' : '#1e293b', fontWeight: esDirecto ? 700 : 400 }}>{p.name}</Typography>
-                              </Stack>
-                              <Switch
-                                size="small"
-                                checked={esRol || esDirecto}
-                                disabled={esRol}
-                                onChange={() => handleTogglePermisoDirecto(p.id)}
-                              />
-                            </Box>
-                          );
-                        })}
-                      </Box>
-                    </Collapse>
-                  </Card>
+                        <Box sx={{ p: 1.5, flexGrow: 1 }}>
+                            {filtrados.map(p => {
+                                const esRol = permisosBaseRol.includes(p.id);
+                                const esDirecto = permisosDirectos.includes(p.id);
+                                const activo = esRol || esDirecto;
+
+                                return (
+                                    <Box key={p.id} sx={{ 
+                                        display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
+                                        p: 1.2, borderRadius: '10px', mb: 0.5,
+                                        bgcolor: activo ? (esRol ? '#f1f5f9' : '#e0f2fe') : 'transparent',
+                                        transition: '0.2s'
+                                    }}>
+                                        <Stack direction="row" spacing={1.5} alignItems="center">
+                                            {esRol ? (
+                                                <Tooltip title="Heredado del Rol (Solo lectura)">
+                                                    <LockIcon sx={{ fontSize: 16, color: '#94a3b8' }} />
+                                                </Tooltip>
+                                            ) : (
+                                                <HubIcon sx={{ fontSize: 16, color: esDirecto ? '#0ea5e9' : '#cbd5e1' }} />
+                                            )}
+                                            <Typography variant="body2" sx={{ 
+                                                color: esRol ? '#64748b' : '#334155', 
+                                                fontWeight: activo ? 700 : 400,
+                                                fontSize: '0.8rem'
+                                            }}>
+                                                {p.name}
+                                            </Typography>
+                                        </Stack>
+                                        <Switch
+                                            size="small"
+                                            checked={activo}
+                                            disabled={esRol}
+                                            onChange={() => handleTogglePermisoDirecto(p.id)}
+                                            sx={{
+                                                '& .MuiSwitch-switchBase.Mui-checked': { color: '#0ea5e9' },
+                                                '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#0ea5e9' }
+                                            }}
+                                        />
+                                    </Box>
+                                );
+                            })}
+                        </Box>
+                    </Card>
+                  </Fade>
                 </Grid>
               );
             })}
@@ -292,4 +333,4 @@ const AsignacionSeguridad = () => {
   );
 };
 
-export default AsignacionSeguridad;
+export default AsignacionSeguridad;

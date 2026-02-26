@@ -41,7 +41,13 @@ const OrdenDetail = () => {
 
     if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}><CircularProgress /></Box>;
     if (!orden) return <Alert severity="error">No se encontró la información de la orden.</Alert>;
+    const totalMateriaPrima = orden.materiales?.reduce((acc, mat) => {
+        const cantidad = Number(mat.cantidad_necesaria) || 0;
+        const costo = Number(mat.costo_unitario) || 0;
+        return acc + (cantidad * costo);
+    }, 0) || 0;
 
+    console.log('costao',orden.materiales);
     return (
         <Box sx={{ p: { xs: 2, md: 4 }, backgroundColor: '#f4f6f8', minHeight: '100vh' }}>
             
@@ -182,29 +188,56 @@ const OrdenDetail = () => {
                 
                 <TableContainer component={Box} sx={{ mt: 2, mb: 4 }}>
                     <Table sx={{ minWidth: 650 }} size="medium">
-                        <TableHead>
-                            <TableRow sx={{ bgcolor: '#f8f9fa' }}>
-                                <TableCell sx={{ fontWeight: 'bold', color: '#555' }}>CÓDIGO MP</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold', color: '#555' }}>DESCRIPCIÓN DE MATERIAL</TableCell>
-                                <TableCell align="right" sx={{ fontWeight: 'bold', color: '#555' }}>CANTIDAD NECESARIA</TableCell>
-                            </TableRow>
-                        </TableHead>
+                    <TableHead>
+    <TableRow sx={{ bgcolor: '#f8f9fa' }}>
+        <TableCell sx={{ fontWeight: 'bold', color: '#555' }}>CÓDIGO MP</TableCell>
+        <TableCell sx={{ fontWeight: 'bold', color: '#555' }}>DESCRIPCIÓN DE MATERIAL</TableCell>
+        <TableCell align="right" sx={{ fontWeight: 'bold', color: '#555' }}>CANTIDAD NECESARIA</TableCell>
+        <TableCell align="right" sx={{ fontWeight: 'bold', color: '#555' }}>COSTO UNITARIO</TableCell>
+        <TableCell align="right" sx={{ fontWeight: 'bold', color: '#555' }}>TOTAL</TableCell>
+    </TableRow>
+</TableHead>
                         <TableBody>
-                            {orden.materiales?.map((mat) => (
-                                <TableRow key={mat.id_producto_material} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                                    <TableCell>MP-{mat.id_producto_material}</TableCell>
-                                    <TableCell>
-                                        <Typography variant="body1" fontWeight="medium">
-                                            {mat.materia_prima}
-                                        </Typography>
-                                    </TableCell>
-                                    <TableCell align="right">
-                                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                                            {mat.cantidad_necesaria}
-                                        </Typography>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
+                        {orden.materiales?.map((mat) => {
+   const cantidad = Number(mat.cantidad_necesaria) || 0;
+   const costo = Number(mat.costo_unitario) || 0;
+   const totalItem = cantidad * costo;
+    return (
+        <TableRow key={mat.id_producto_material} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+           <TableCell>{mat.codigo}</TableCell>
+            <TableCell>
+                <Typography variant="body1" fontWeight="medium">
+                    {mat.materia_prima}
+                </Typography>
+            </TableCell>
+            <TableCell align="right">
+                <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                    {mat.cantidad_necesaria}
+                </Typography>
+            </TableCell>
+            <TableCell align="right">
+            Bs {(Number(mat.costo_unitario) || 0).toFixed(2)}
+            </TableCell>
+            <TableCell align="right">
+                <Typography fontWeight="bold">
+                    Bs {totalItem.toFixed(2)}
+                </Typography>
+            </TableCell>
+        </TableRow>
+    );
+})}
+<TableRow>
+    <TableCell colSpan={4} align="right">
+        <Typography fontWeight="bold">
+            TOTAL COSTO MATERIA PRIMA
+        </Typography>
+    </TableCell>
+    <TableCell align="right">
+        <Typography variant="h6" fontWeight="bold" color="secondary">
+            Bs {totalMateriaPrima.toFixed(2)}
+        </Typography>
+    </TableCell>
+</TableRow>
                         </TableBody>
                     </Table>
                 </TableContainer>

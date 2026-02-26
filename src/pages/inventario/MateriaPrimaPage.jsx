@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { 
     Typography, Container, CircularProgress, Box, 
-    Paper, Grid, Button, Divider, Stack 
+    Paper, Grid, Button, Divider, Stack, TextField, InputAdornment 
 } from '@mui/material';
 import PrintIcon from '@mui/icons-material/Print';
 import PrecisionManufacturingIcon from '@mui/icons-material/PrecisionManufacturing';
+import SearchIcon from '@mui/icons-material/Search';
 import { getStockPorAlmacen } from '../../api/inventarioApi';
 import { getAlmacenes } from '../../api/almacenesApi'; 
 import InventarioTablaMP from '../../components/inventario/InventarioTablaMP';
@@ -12,6 +13,8 @@ import InventarioTablaMP from '../../components/inventario/InventarioTablaMP';
 const MateriaPrimaPage = () => {
     const [stockTotal, setStockTotal] = useState([]);
     const [cargando, setCargando] = useState(true);
+    // Nuevo estado para la búsqueda
+    const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
         const cargarData = async () => {
@@ -39,16 +42,18 @@ const MateriaPrimaPage = () => {
         cargarData();
     }, []);
     
-
-    const totalVariedades = stockTotal.length;
-    const unidadesTotales = stockTotal.reduce((acc, curr) => 
-        acc + Number(curr.stock_fisico || curr.stock_actual), 0
+    // LÓGICA DE FILTRADO
+    const stockFiltrado = stockTotal.filter(item => 
+        item.nombre_producto?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.codigo?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    // OPCIONAL: Podrías añadir una constante para ver cuánto tienes "parado"
-    const totalReservado = stockTotal.reduce((acc, curr) => 
-        acc + Number(curr.stock_reservado || 0), 0
+    // Cálculos basados en el stock filtrado para que las tarjetas sean dinámicas
+    const totalVariedades = stockFiltrado.length;
+    const unidadesTotales = stockFiltrado.reduce((acc, curr) => 
+        acc + Number(curr.stock_fisico || curr.stock_actual || 0), 0
     );
+
     const handlePrint = () => { window.print(); };
 
     if (cargando) {
@@ -64,7 +69,7 @@ const MateriaPrimaPage = () => {
 
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, mb: 4, gap: 2 }}>
                 <Box>
                     <Typography variant="h3" fontWeight="800" sx={{ color: '#263238', letterSpacing: -1 }}>
                         Control de Materia Prima
@@ -88,6 +93,32 @@ const MateriaPrimaPage = () => {
                 </Button>
             </Box>
 
+            {/* Buscador de Insumos */}
+            <Box sx={{ mb: 4 }} className="no-print">
+                <TextField
+                    fullWidth
+                    placeholder="Buscar insumo por nombre o código..."
+                    variant="outlined"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <SearchIcon sx={{ color: '#00838f' }} />
+                            </InputAdornment>
+                        ),
+                    }}
+                    sx={{
+                        '& .MuiOutlinedInput-root': {
+                            borderRadius: 3,
+                            bgcolor: 'white',
+                            '& fieldset': { borderColor: '#e0e0e0' },
+                            '&:hover fieldset': { borderColor: '#00838f' },
+                        }
+                    }}
+                />
+            </Box>
+
             <Grid container spacing={3} sx={{ mb: 4 }} className="no-print">
                 <Grid item xs={12} md={6}>
                     <Paper elevation={0} sx={{ p: 3, bgcolor: '#e0f7fa', borderLeft: '6px solid #00838f', borderRadius: 2 }}>
@@ -105,7 +136,7 @@ const MateriaPrimaPage = () => {
                         <Stack direction="row" spacing={2} alignItems="center">
                             <Box sx={{ fontSize: 40 }}>🛠️</Box>
                             <Box>
-                                <Typography variant="h4" fontWeight="bold" color="#263238">{unidadesTotales}</Typography>
+                                <Typography variant="h4" fontWeight="bold" color="#263238">{unidadesTotales.toLocaleString()}</Typography>
                                 <Typography variant="body2" color="text.secondary">Stock Físico Total</Typography>
                             </Box>
                         </Stack>
@@ -116,7 +147,7 @@ const MateriaPrimaPage = () => {
             <Divider sx={{ mb: 4 }} className="no-print" />
 
             <Paper elevation={6} sx={{ borderRadius: 3, overflow: 'hidden', border: '1px solid #e0e0e0' }}>
-                <InventarioTablaMP stock={stockTotal} />
+                <InventarioTablaMP stock={stockFiltrado} />
             </Paper>
 
             <style>

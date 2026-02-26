@@ -2,8 +2,11 @@ import { useEffect, useState } from 'react';
 import { 
     Box, Typography, Button, Paper, Table, TableBody, TableCell, 
     TableContainer, TableHead, TableRow, Chip, IconButton, Tooltip, 
-    CircularProgress, Fade, Stack, Avatar, useTheme, Card, Grid
+    CircularProgress, Fade, Stack, Avatar, useTheme, Card, Grid,
+    TextField, InputAdornment // Importamos componentes para el buscador
 } from '@mui/material';
+import SearchTwoToneIcon from '@mui/icons-material/SearchTwoTone'; // Icono de lupa
+// ... (resto de tus imports de iconos iguales)
 import VisibilityTwoToneIcon from '@mui/icons-material/VisibilityTwoTone';
 import AddCircleTwoToneIcon from '@mui/icons-material/AddCircleTwoTone';
 import DeleteTwoToneIcon from '@mui/icons-material/DeleteTwoTone';
@@ -19,14 +22,15 @@ import { useAuth } from '../../context/AuthContext';
 const OrdenList = () => {
     const [ordenes, setOrdenes] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState(""); // ESTADO PARA EL BUSCADOR
     const navigate = useNavigate();
     const { usuario } = useAuth();
     const theme = useTheme();
 
+    // ... (Tu lógica de permisos y colores exacta)
     const user = usuario?.user ?? usuario;
     const isAdmin = user?.roles?.some(r => r.slug === 'admin');
     const hasPermission = (perm) => user?.permissions?.some(p => p.slug === perm);
-
     const canCreate = isAdmin || hasPermission('orden.create');
     const canEdit   = isAdmin || hasPermission('orden.edit');
     const canDelete = isAdmin || hasPermission('orden.delete');
@@ -53,6 +57,12 @@ const OrdenList = () => {
     };
 
     useEffect(() => { fetchOrdenes(); }, []);
+
+    // LÓGICA DE FILTRADO
+    const ordenesFiltradas = ordenes.filter(o => 
+        o.id_orden?.toString().toLowerCase().includes(searchTerm.toLowerCase()) || 
+        o.producto_terminado?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     const handleDelete = async (id) => {
         const result = await Swal.fire({
@@ -111,27 +121,52 @@ const OrdenList = () => {
                         <Stack direction="row" spacing={1} alignItems="center">
                             <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#10b981' }} />
                             <Typography variant="body2" sx={{ color: colors.textSecondary, fontWeight: 500 }}>
-                                {ordenes.length} órdenes activas en el sistema
+                                {ordenesFiltradas.length} órdenes encontradas
                             </Typography>
                         </Stack>
                     </Box>
 
-                    {canCreate && (
-                        <Button 
-                            variant="contained" 
-                            startIcon={<AddCircleTwoToneIcon />} 
-                            onClick={() => navigate('/orden/nuevo')}
+                    <Stack direction="row" spacing={2} alignItems="center" sx={{ flexGrow: { xs: 1, md: 0 }, width: { xs: '100%', md: 'auto' } }}>
+                        {/* BUSCADOR IMPLEMENTADO */}
+                        <TextField
+                            placeholder="Buscar por código o producto..."
+                            variant="outlined"
+                            size="small"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
                             sx={{ 
-                                bgcolor: colors.primary, borderRadius: '14px', px: 4, py: 1.5,
-                                textTransform: 'none', fontWeight: 700, fontSize: '0.95rem',
-                                boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
-                                '&:hover': { bgcolor: '#000', transform: 'translateY(-2px)' },
-                                transition: 'all 0.2s'
+                                bgcolor: '#fff', 
+                                borderRadius: '12px',
+                                '& .MuiOutlinedInput-root': { borderRadius: '12px' },
+                                minWidth: '300px'
                             }}
-                        >
-                            Nueva Orden
-                        </Button>
-                    )}
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <SearchTwoToneIcon sx={{ color: colors.textSecondary }} />
+                                    </InputAdornment>
+                                ),
+                            }}
+                        />
+
+                        {canCreate && (
+                            <Button 
+                                variant="contained" 
+                                startIcon={<AddCircleTwoToneIcon />} 
+                                onClick={() => navigate('/orden/nuevo')}
+                                sx={{ 
+                                    bgcolor: colors.primary, borderRadius: '14px', px: 4, py: 1.5,
+                                    textTransform: 'none', fontWeight: 700, fontSize: '0.95rem',
+                                    boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
+                                    '&:hover': { bgcolor: '#000', transform: 'translateY(-2px)' },
+                                    transition: 'all 0.2s',
+                                    whiteSpace: 'nowrap'
+                                }}
+                            >
+                                Nueva Orden
+                            </Button>
+                        )}
+                    </Stack>
                 </Box>
 
                 {/* --- METRICS CARDS --- */}
@@ -153,14 +188,14 @@ const OrdenList = () => {
                     ))}
                 </Grid>
 
-                {/* --- TABLA CON FIX DE VISIBILIDAD --- */}
+                {/* --- TABLA --- */}
                 <TableContainer 
                     component={Paper} 
                     sx={{ 
                         borderRadius: '24px', 
                         border: `1px solid ${colors.border}`,
                         boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
-                        overflowX: 'auto', // Permite scroll horizontal si es necesario
+                        overflowX: 'auto',
                     }}
                 >
                     <Table sx={{ minWidth: 1100, tableLayout: 'auto' }}>
@@ -177,7 +212,7 @@ const OrdenList = () => {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {ordenes.map((o) => {
+                            {ordenesFiltradas.map((o) => { // USAMOS LAS FILTRADAS AQUÍ
                                 const status = getStatusStyles(o.estado);
                                 return (
                                     <TableRow key={o.id_orden} sx={{ '&:hover': { bgcolor: '#fcfdfe' }, transition: 'background 0.2s' }}>
@@ -227,97 +262,46 @@ const OrdenList = () => {
                                             />
                                         </TableCell>
                                         <TableCell>
-    {!o.fecha_entrega_estimada ? (
-        <Typography sx={{ color: '#94a3b8', fontSize: '0.8rem' }}>
-            Sin fecha límite
-        </Typography>
-    ) : o.estado === 'cancelado' ? (
-        <Typography sx={{ color: '#9ca3af', fontSize: '0.8rem', fontWeight: 600 }}>
-            Orden cancelada
-        </Typography>
-    ) : o.estado === 'pendiente' ? (
-        <Typography sx={{ color: '#64748b', fontSize: '0.8rem' }}>
-            Pendiente de iniciar
-        </Typography>
-    ) : o.estado === 'completado' ? (
-        o.dias_retraso > 0 ? (
-            <Chip
-                label={`${o.dias_retraso}d de retraso`}
-                size="small"
-                sx={{
-                    bgcolor: '#fff1f2',
-                    color: '#e11d48',
-                    fontWeight: 800,
-                    fontSize: '0.7rem'
-                }}
-            />
-        ) : (
-            <Chip
-                label="Completado en tiempo"
-                size="small"
-                sx={{
-                    bgcolor: '#ecfdf5',
-                    color: '#059669',
-                    fontWeight: 700,
-                    fontSize: '0.7rem'
-                }}
-            />
-        )
-    ) : o.estado === 'en_proceso' ? (
-        o.retraso_actual > 0 ? (
-            <Chip
-                label={`${o.retraso_actual}d de retraso`}
-                size="small"
-                sx={{
-                    bgcolor: '#fff1f2',
-                    color: '#e11d48',
-                    fontWeight: 800,
-                    fontSize: '0.7rem'
-                }}
-            />
-        ) : (
-            <Typography
-                sx={{
-                    color: '#2563eb',
-                    fontSize: '0.75rem',
-                    fontWeight: 600
-                }}
-            >
-                En plazo
-            </Typography>
-        )
-    ) : (
-        <Typography sx={{ color: '#cbd5e1', fontSize: '0.8rem' }}>
-            ---
-        </Typography>
-    )}
-</TableCell>
+                                            {/* (Logica de alertas igual...) */}
+                                            {!o.fecha_entrega_estimada ? (
+                                                <Typography sx={{ color: '#94a3b8', fontSize: '0.8rem' }}>Sin fecha límite</Typography>
+                                            ) : o.estado === 'cancelado' ? (
+                                                <Typography sx={{ color: '#9ca3af', fontSize: '0.8rem', fontWeight: 600 }}>Orden cancelada</Typography>
+                                            ) : o.estado === 'pendiente' ? (
+                                                <Typography sx={{ color: '#64748b', fontSize: '0.8rem' }}>Pendiente de iniciar</Typography>
+                                            ) : o.estado === 'completado' ? (
+                                                o.dias_retraso > 0 ? (
+                                                    <Chip label={`${o.dias_retraso}d de retraso`} size="small" sx={{ bgcolor: '#fff1f2', color: '#e11d48', fontWeight: 800, fontSize: '0.7rem' }} />
+                                                ) : (
+                                                    <Chip label="Completado en tiempo" size="small" sx={{ bgcolor: '#ecfdf5', color: '#059669', fontWeight: 700, fontSize: '0.7rem' }} />
+                                                )
+                                            ) : o.estado === 'en_proceso' ? (
+                                                o.retraso_actual > 0 ? (
+                                                    <Chip label={`${o.retraso_actual}d de retraso`} size="small" sx={{ bgcolor: '#fff1f2', color: '#e11d48', fontWeight: 800, fontSize: '0.7rem' }} />
+                                                ) : (
+                                                    <Typography sx={{ color: '#2563eb', fontSize: '0.75rem', fontWeight: 600 }}>En plazo</Typography>
+                                                )
+                                            ) : (
+                                                <Typography sx={{ color: '#cbd5e1', fontSize: '0.8rem' }}>---</Typography>
+                                            )}
+                                        </TableCell>
                                         <TableCell align="right" sx={{ pr: 3, whiteSpace: 'nowrap' }}>
                                             <Stack direction="row" spacing={1} justifyContent="flex-end">
                                                 <Tooltip title="Explorar">
-                                                    <IconButton 
-                                                        onClick={() => navigate(`/orden/detalle/${o.id_orden}`)}
-                                                        sx={{ color: colors.textSecondary, '&:hover': { color: colors.accent, bgcolor: `${colors.accent}10` } }}
-                                                    >
+                                                    <IconButton onClick={() => navigate(`/orden/detalle/${o.id_orden}`)} sx={{ color: colors.textSecondary, '&:hover': { color: colors.accent, bgcolor: `${colors.accent}10` } }}>
                                                         <VisibilityTwoToneIcon fontSize="small" />
                                                     </IconButton>
                                                 </Tooltip>
                                                 {canEdit && (
                                                     <Tooltip title="Editar">
-                                                        <IconButton 
-                                                            onClick={() => navigate(`/orden/editar/${o.id_orden}`)}
-                                                            sx={{ color: colors.textSecondary, '&:hover': { color: colors.primary, bgcolor: '#f1f5f9' } }}
-                                                        >
+                                                        <IconButton onClick={() => navigate(`/orden/editar/${o.id_orden}`)} sx={{ color: colors.textSecondary, '&:hover': { color: colors.primary, bgcolor: '#f1f5f9' } }}>
                                                             <EditTwoToneIcon fontSize="small" />
                                                         </IconButton>
                                                     </Tooltip>
                                                 )}
                                                 {canDelete && (
                                                     <Tooltip title="Eliminar">
-                                                        <IconButton 
-                                                            onClick={() => handleDelete(o.id_orden)}
-                                                            sx={{ color: '#fda4af', '&:hover': { color: '#e11d48', bgcolor: '#fff1f2' } }}
-                                                        >
+                                                        <IconButton onClick={() => handleDelete(o.id_orden)} sx={{ color: '#fda4af', '&:hover': { color: '#e11d48', bgcolor: '#fff1f2' } }}>
                                                             <DeleteTwoToneIcon fontSize="small" />
                                                         </IconButton>
                                                     </Tooltip>
@@ -331,18 +315,13 @@ const OrdenList = () => {
                     </Table>
                 </TableContainer>
 
-                {ordenes.length === 0 && (
+                {ordenesFiltradas.length === 0 && (
                     <Box sx={{ textAlign: 'center', py: 12, bgcolor: '#fff', borderRadius: '32px', mt: 3, border: `2px dashed ${colors.border}` }}>
                         <Avatar sx={{ width: 80, height: 80, mx: 'auto', mb: 3, bgcolor: colors.bgLight }}>
                             <AssignmentTwoToneIcon sx={{ fontSize: 40, color: '#cbd5e1' }} />
                         </Avatar>
-                        <Typography variant="h6" sx={{ color: colors.textMain, fontWeight: 700 }}>Bandeja vacía</Typography>
-                        <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 3 }}>No hay órdenes de producción que mostrar en este momento.</Typography>
-                        {canCreate && (
-                            <Button onClick={() => navigate('/orden/nuevo')} variant="text" sx={{ textTransform: 'none', fontWeight: 700, color: colors.accent }}>
-                                Crear mi primera orden ahora
-                            </Button>
-                        )}
+                        <Typography variant="h6" sx={{ color: colors.textMain, fontWeight: 700 }}>Sin resultados</Typography>
+                        <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 3 }}>No encontramos órdenes que coincidan con tu búsqueda.</Typography>
                     </Box>
                 )}
             </Box>

@@ -6,7 +6,7 @@ const InventarioTablaPT = ({ stock = [] }) => {
             <Table>
                 <TableHead>
                     <TableRow sx={{ bgcolor: '#f1f8e9' }}> {/* Color verde claro para PT */}
-                        <TableCell><strong>ID PT</strong></TableCell>
+                        <TableCell><strong>Codigo</strong></TableCell>
                         <TableCell><strong>Producto Terminado</strong></TableCell>
                         <TableCell align="right"><strong>Stock Actual</strong></TableCell>
                     </TableRow>
@@ -15,7 +15,7 @@ const InventarioTablaPT = ({ stock = [] }) => {
                     {stock.length > 0 ? (
                         stock.map((item) => (
                             <TableRow key={item.id_producto} hover>
-                                <TableCell>{item.id_producto}</TableCell>
+                                <TableCell>{item.codigo}</TableCell>
                                 <TableCell>
     <Box sx={{ display: 'flex', alignItems: 'center' }}>
         
@@ -41,7 +41,7 @@ const InventarioTablaPT = ({ stock = [] }) => {
                 {item.nombre_producto}
             </Typography>
 
-            {(item.nombre_material || item.nombre_color) && (
+            {(item.nombre_material || item.nombre_color || item.nombre_talla) && (
                 <Typography
                     variant="body2"
                     sx={{
@@ -50,7 +50,7 @@ const InventarioTablaPT = ({ stock = [] }) => {
                         mt: 0.2
                     }}
                 >
-                    {[item.nombre_material, item.nombre_color]
+                    {[item.nombre_material, item.nombre_color,  item.nombre_talla]
                         .filter(Boolean)
                         .join(' • ')}
                 </Typography>

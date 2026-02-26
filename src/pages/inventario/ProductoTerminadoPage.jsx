@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { 
     Typography, Container, CircularProgress, Box, 
-    Paper, Grid, Button, Divider, Stack 
+    Paper, Grid, Button, Divider, Stack, TextField, InputAdornment 
 } from '@mui/material';
 import PrintIcon from '@mui/icons-material/Print';
 import InventoryIcon from '@mui/icons-material/Inventory';
+import SearchIcon from '@mui/icons-material/Search';
 import { getStockPorAlmacen } from '../../api/inventarioApi';
 import { getAlmacenes } from '../../api/almacenesApi'; 
 import InventarioTablaPT from '../../components/inventario/InventarioTablaPT';
@@ -12,39 +13,38 @@ import InventarioTablaPT from '../../components/inventario/InventarioTablaPT';
 const ProductoTerminadoPage = () => {
     const [stockTotal, setStockTotal] = useState([]);
     const [cargando, setCargando] = useState(true);
+    // Nuevo estado para la búsqueda
+    const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
         const cargarData = async () => {
             try {
-                // Solo consultamos almacén PT (id = 2)
                 const response = await getStockPorAlmacen(2);
-    
                 const contenido = response?.data || response;
-    
                 const soloPT = Array.isArray(contenido)
                     ? contenido.filter(item =>
                         item.tipo_producto?.toString().trim().toUpperCase() === 'PT'
                       )
                     : [];
-    
                 setStockTotal(soloPT);
                 setCargando(false);
-    
             } catch (error) {
                 console.error("Error al cargar inventario PT:", error);
                 setCargando(false);
             }
         };
-    
         cargarData();
     }, []);
 
-    // Cálculo dinámico de indicadores
-    const totalItems = stockTotal.length;
+    // LÓGICA DE FILTRADO (Sin tocar la data original)
+    const stockFiltrado = stockTotal.filter(item => 
+        item.nombre_producto?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.codigo?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
-    // CORRECCIÓN PARA EL NaN: Usamos los nombres reales de las columnas según tus logs
-    const stockAcumulado = stockTotal.reduce((acc, curr) => {
-        // En tus logs la columna es 'stock_fisico' o 'stock_disponible'
+    // Cálculo dinámico basado en el filtrado
+    const totalItems = stockFiltrado.length;
+    const stockAcumulado = stockFiltrado.reduce((acc, curr) => {
         const valor = curr.stock_fisico || curr.stock_disponible || curr.stock_actual || 0;
         const n = Number(valor);
         return acc + (isNaN(n) ? 0 : n);
@@ -84,6 +84,33 @@ const ProductoTerminadoPage = () => {
                 </Button>
             </Box>
 
+            {/* Buscador Estilizado */}
+            <Box sx={{ mb: 4 }} className="no-print">
+                <TextField
+                    fullWidth
+                    placeholder="Buscar por nombre de producto o código ID..."
+                    variant="outlined"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <SearchIcon sx={{ color: '#1B3B4A' }} />
+                            </InputAdornment>
+                        ),
+                    }}
+                    sx={{
+                        '& .MuiOutlinedInput-root': {
+                            borderRadius: 3,
+                            bgcolor: 'white',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                            '& fieldset': { borderColor: '#e0e0e0' },
+                            '&:hover fieldset': { borderColor: '#1B3B4A' },
+                        }
+                    }}
+                />
+            </Box>
+
             {/* Tarjetas de Resumen */}
             <Grid container spacing={3} sx={{ mb: 4 }} className="no-print">
                 <Grid item xs={12} md={6}>
@@ -114,7 +141,7 @@ const ProductoTerminadoPage = () => {
 
             {/* Tabla de Resultados */}
             <Paper elevation={4} sx={{ borderRadius: 3, overflow: 'hidden' }}>
-                <InventarioTablaPT stock={stockTotal} />
+                <InventarioTablaPT stock={stockFiltrado} />
             </Paper>
 
             {/* Estilos para Impresión */}

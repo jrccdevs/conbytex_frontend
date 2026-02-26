@@ -19,7 +19,12 @@ import CancelTwoToneIcon from '@mui/icons-material/CancelTwoTone';
 
 const EmpleadoDrawer = ({ open, setOpen, fetchEmpleados, empleado }) => {
   const [form, setForm] = useState({
+    codigo:'',
     nombre_empleado: '',
+    email:'',
+    telefono:'',
+    direccion:'',
+    fecha_nacimiento:'',
     cargo: '',
     id_usuario: '',
     activo: true
@@ -28,25 +33,48 @@ const EmpleadoDrawer = ({ open, setOpen, fetchEmpleados, empleado }) => {
   useEffect(() => {
     if (empleado) {
       setForm({
-        nombre_empleado: empleado.nombre_empleado || '',
-        cargo: empleado.cargo || '',
-        id_usuario: empleado.id_usuario || '',
-        activo: empleado.activo ?? true
+        codigo: empleado.codigo || '',
+  nombre_empleado: empleado.nombre_empleado || '',
+  email: empleado.email || '',
+  telefono: empleado.telefono || '',
+  direccion: empleado.direccion || '',
+  fecha_nacimiento: empleado.fecha_nacimiento
+    ? empleado.fecha_nacimiento.split('T')[0]
+    : '',
+  cargo: empleado.cargo || '',
+  id_usuario: empleado.id_usuario || '',
+  activo: empleado.activo ?? true
       });
     } else {
-      setForm({ nombre_empleado: '', cargo: '', id_usuario: '', activo: true });
+      setForm({ codigo: '',
+      nombre_empleado: '',
+      email: '',
+      telefono: '',
+      direccion: '',
+      fecha_nacimiento: '',
+      cargo: '',
+      id_usuario: '',
+      activo: true});
     }
   }, [empleado, open]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+  
+    let newValue = value;
+  
+    // 🔹 Solo números en teléfono
+    if (name === 'telefono') {
+      newValue = value.replace(/\D/g, ''); // elimina todo lo que no sea número
+    }
+  
     setForm(prev => ({
       ...prev,
       [name]: type === 'checkbox'
         ? checked
         : ['nombre_empleado', 'cargo'].includes(name)
-          ? value.toUpperCase()
-          : value
+          ? newValue.toUpperCase()
+          : newValue
     }));
   };
 
@@ -99,11 +127,24 @@ const EmpleadoDrawer = ({ open, setOpen, fetchEmpleados, empleado }) => {
       });
     };
   
-    if (!form.nombre_empleado) {
+    if (!form.codigo  || !form.nombre_empleado) {
       showCustomAlert('Campo Requerido', 'El nombre es obligatorio para el registro.', 'error', colors.error);
       return;
     }
-  
+  // 🔹 Validación de email
+if (form.email) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!emailRegex.test(form.email)) {
+    showCustomAlert(
+      'Email inválido',
+      'Ingrese un correo electrónico válido.',
+      'error',
+      colors.error
+    );
+    return;
+  }
+}
     try {
       const payload = { ...form, id_usuario: form.id_usuario || null };
   
@@ -118,7 +159,15 @@ const EmpleadoDrawer = ({ open, setOpen, fetchEmpleados, empleado }) => {
       fetchEmpleados();
       setOpen(false);
     } catch (error) {
-      showCustomAlert('Error de Servidor', 'No se pudo guardar la información.', 'error', colors.error);
+      const backendMessage =
+        error.response?.data?.message || 'No se pudo guardar la información.';
+    
+      showCustomAlert(
+        'Validación',
+        backendMessage,
+        'error',
+        colors.error
+      );
     }
   };
 
@@ -180,12 +229,59 @@ const EmpleadoDrawer = ({ open, setOpen, fetchEmpleados, empleado }) => {
             <Box>
               <Typography variant="overline" sx={{ color: '#6366f1', fontWeight: 900, mb: 2, display: 'block' }}>Datos Principales</Typography>
               <TextField
+  fullWidth
+  label="Código de Empleado"
+  name="codigo"
+  value={form.codigo}
+  onChange={handleChange}
+  margin="normal"
+  sx={inputStyle}
+/>
+              <TextField
                 fullWidth label="Nombre del Empleado" name="nombre_empleado"
                 value={form.nombre_empleado} onChange={handleChange} margin="normal"
                 sx={inputStyle}
                 InputProps={{ startAdornment: (<InputAdornment position="start"><PersonOutlineTwoToneIcon fontSize="small" /></InputAdornment>) }}
               />
-
+<TextField
+  fullWidth
+  label="Correo Electrónico"
+  name="email"
+  value={form.email}
+  onChange={handleChange}
+  margin="normal"
+  sx={inputStyle}
+/>
+<TextField
+  fullWidth
+  label="Teléfono"
+  name="telefono"
+  value={form.telefono}
+  onChange={handleChange}
+  margin="normal"
+  sx={inputStyle}
+  inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+/>
+<TextField
+  fullWidth
+  label="Dirección"
+  name="direccion"
+  value={form.direccion}
+  onChange={handleChange}
+  margin="normal"
+  sx={inputStyle}
+/>
+<TextField
+  fullWidth
+  type="date"
+  label="Fecha de Nacimiento"
+  name="fecha_nacimiento"
+  value={form.fecha_nacimiento}
+  onChange={handleChange}
+  margin="normal"
+  InputLabelProps={{ shrink: true }}
+  sx={inputStyle}
+/>
               <TextField
                 fullWidth label="Cargo / Puesto" name="cargo"
                 value={form.cargo} onChange={handleChange} margin="normal"

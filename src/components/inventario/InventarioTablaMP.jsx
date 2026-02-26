@@ -6,7 +6,7 @@ const InventarioTablaMP = ({ stock = [] }) => {
             <Table>
                 <TableHead>
                     <TableRow sx={{ bgcolor: '#e3f2fd' }}>
-                        <TableCell><strong>ID</strong></TableCell>
+                        <TableCell><strong>Codigo</strong></TableCell>
                         <TableCell><strong>Materia Prima</strong></TableCell>
                         <TableCell align="right"><strong>Stock Físico</strong></TableCell>
                         <TableCell align="right"><strong>Reservado</strong></TableCell>
@@ -24,7 +24,7 @@ const stockDisponible = parseFloat(
 );
                             return (
                                 <TableRow key={item.id_producto} hover>
-                                    <TableCell>{item.id_producto}</TableCell>
+                                    <TableCell>{item.codigo}</TableCell>
                                     <TableCell>
     <Box sx={{ display: 'flex', alignItems: 'center' }}>
         

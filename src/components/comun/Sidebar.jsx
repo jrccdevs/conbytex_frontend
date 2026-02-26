@@ -112,8 +112,8 @@ const Sidebar = ({ drawerWidth = 280 }) => {
         </ListItemButton>
 
         {/* SECCIÓN: SEGURIDAD (Se activa con tu slug real 'users.view') */}
-        {tienePermiso('users.view') && (
-          <>
+        
+         
             <Typography variant="caption" sx={{
               px: 2, py: 2, display: 'block', color: colors.adminAccent,
               fontWeight: 800, fontSize: '0.65rem', letterSpacing: '1.5px', mt: 2
@@ -122,6 +122,7 @@ const Sidebar = ({ drawerWidth = 280 }) => {
             </Typography>
 
             {/* Gestión de Usuarios */}
+            {tienePermiso('users.view') && (
             <ListItemButton
               selected={location.pathname.startsWith('/usuarios')}
               onClick={() => navigate('/usuarios')}
@@ -140,7 +141,8 @@ const Sidebar = ({ drawerWidth = 280 }) => {
               </ListItemIcon>
               <ListItemText primary="Gestión Usuarios" primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 700 }} />
             </ListItemButton>
-
+ 
+             )}
             {/* Roles y Permisos (Placeholder para siguiente módulo) */}
             {tienePermiso('roles.view') && (
               <ListItemButton
@@ -312,6 +314,30 @@ const Sidebar = ({ drawerWidth = 280 }) => {
 
 
             )}
+             {/* EMPLEADOS (Placeholder para siguiente módulo) */}
+             {tienePermiso('clientes.view') && (
+              <ListItemButton
+                selected={location.pathname.startsWith('/clientes')}
+                onClick={() => navigate('/clientes')}
+                sx={{
+                  borderRadius: '12px', mb: 1,
+                  '&.Mui-selected': {
+                    bgcolor: alpha(colors.adminAccent, 0.1),
+                    borderLeft: `4px solid ${colors.adminAccent}`,
+                    '& .MuiListItemIcon-root': { color: colors.adminAccent }
+                  },
+                  '&:hover': { bgcolor: alpha(colors.adminAccent, 0.05) }
+                }}
+              >
+                <ListItemIcon sx={{ color: colors.textMuted, minWidth: 45 }}>
+                  <BadgeIcon  />
+                </ListItemIcon>
+                <ListItemText primary="Clientes" primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 700 }} />
+              </ListItemButton>
+
+
+
+            )}
             {tienePermiso('orden.view') && (
               <ListItemButton
                 selected={location.pathname.startsWith('/orden')}
@@ -467,8 +493,7 @@ const Sidebar = ({ drawerWidth = 280 }) => {
 
 
             )}
-          </>
-        )}
+         
 
       </List>
 

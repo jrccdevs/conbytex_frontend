@@ -20,12 +20,12 @@ import { useAuth } from '../../context/AuthContext';
 /**
  * Componente interno para renderizar la tabla de materiales (Vista de solo lectura)
  */
-const RenderRecetaTable = ({ recetas, formatMateriaPrima, formatCantidad, colors }) => (
+const RenderRecetaTable = ({ recetas, formatMateriaPrima, formatCantidad,formatCodigo, colors }) => (
     <TableContainer component={Paper} elevation={0} sx={{ borderRadius: '20px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
         <Table>
             <TableHead sx={{ backgroundColor: colors.bgLight }}>
                 <TableRow>
-                    <TableCell sx={{ fontWeight: 800, color: colors.primary }}>ID</TableCell>
+                    <TableCell sx={{ fontWeight: 800, color: colors.primary }}>Codigo</TableCell>
                     <TableCell sx={{ fontWeight: 800, color: colors.primary }}>Materia Prima / Insumo</TableCell>
                     <TableCell align="right" sx={{ fontWeight: 800, color: colors.primary }}>Cantidad Requerida</TableCell>
                 </TableRow>
@@ -34,8 +34,7 @@ const RenderRecetaTable = ({ recetas, formatMateriaPrima, formatCantidad, colors
                 {recetas.map((r) => (
                     <TableRow key={r.id_receta} hover sx={{ '&:last-child td': { border: 0 } }}>
                         <TableCell>
-                            <Chip label={r.id_receta} size="small" sx={{ fontWeight: 700, bgcolor: colors.border }} />
-                        </TableCell>
+                        <Chip label={formatCodigo(r)} size="small" sx={{ fontWeight: 700, bgcolor: colors.border }} /></TableCell>
                         <TableCell>
                             <Typography variant="body2" sx={{ fontWeight: 700, color: '#334155' }}>
                                 {formatMateriaPrima(r)}
@@ -120,7 +119,11 @@ const RecetaDetail = () => {
         if (!mpDetails) return r.materia_prima || `ID ${r.id_producto_material}`;
         return [mpDetails.nombre_producto, mpDetails.nombre_material, mpDetails.nombre_color].filter(Boolean).join(' • ');
     };
-    
+    const formatCodigo = (r) => {
+        const mpDetails = getProductoDetails(r.id_producto_material); 
+        // Si existe el detalle, retorna el código, si no, el ID o un guion
+        return mpDetails?.codigo || r.codigo || "S/C";
+    };
     const formatCantidad = (r) => {
         const mpDetails = getProductoDetails(r.id_producto_material);
         return `${r.cantidad || 0} ${mpDetails?.nombre_unidad || 'Unidades'}`;
@@ -210,6 +213,7 @@ const RecetaDetail = () => {
                                         recetas={recetas} 
                                         formatMateriaPrima={formatMateriaPrima} 
                                         formatCantidad={formatCantidad} 
+                                        formatCodigo={formatCodigo}
                                         colors={colors} 
                                     />
                                 </>

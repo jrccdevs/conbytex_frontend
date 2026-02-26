@@ -19,24 +19,41 @@ const MovimientoForm = () => {
     const [productos, setProductos] = useState([]);
     const [almacenes, setAlmacenes] = useState([]);
     const [empleados, setEmpleados] = useState([]);
+    const [clientes, setClientes] = useState([]);
 
     const [formData, setFormData] = useState({
-        id_producto: '', id_almacen: '', id_empleado: '',
-        tipo_movimiento: 'ingreso', cantidad: '', descripcion: ''
+        id_producto: '',
+    id_almacen: '',
+    id_empleado: '',
+    id_cliente: '',
+    tipo_movimiento: 'ingreso',
+    cantidad: '',
+    precio_unitario: '',
+    descripcion: ''
     });
 
     useEffect(() => {
         const loadData = async () => {
-            const [resProd, resEmp, resAlm] = await Promise.all([
-                getProductos(), getEmpleados(), clienteApi.get('/almacenes')
+            const [resProd, resEmp, resAlm, resCli] = await Promise.all([
+                getProductos(), getEmpleados(), 
+                clienteApi.get('/almacenes'),
+                clienteApi.get('/clientes')
             ]);
             setProductos(resProd);
             setEmpleados(resEmp);
             setAlmacenes(resAlm.data);
+            setClientes(resCli.data);
         };
         loadData();
     }, []);
-
+    const productoSeleccionado = productos.find(
+        p => p.id_producto === formData.id_producto
+    );
+    const totalCalculado = 
+    formData.tipo_movimiento === 'salida' &&
+    productoSeleccionado?.tipo_producto === 'PT'
+        ? (Number(formData.cantidad || 0) * Number(formData.precio_unitario || productoSeleccionado.precio_base || 0)).toFixed(2)
+        : null;
     const handleSubmit = async () => {
         // 1. Validación básica de campos
         if(!formData.id_producto || !formData.id_almacen || !formData.id_empleado) {
@@ -53,11 +70,27 @@ const MovimientoForm = () => {
         if(formData.tipo_movimiento === 'ajuste' && !formData.descripcion) {
             return Swal.fire('Atención', 'Los ajustes de inventario requieren una descripción de motivo', 'warning');
         }
+        if (
+            formData.tipo_movimiento === 'salida' &&
+            productoSeleccionado?.tipo_producto === 'PT' &&
+            !formData.id_cliente
+        ) {
+            return Swal.fire(
+                'Atención',
+                'Debe seleccionar un cliente para salida de Producto Terminado',
+                'warning'
+            );
+        }
     
         try {
             await createMovimiento({
                 ...formData,
-                cantidad: cantNum
+                cantidad: cantNum,
+                precio_unitario:
+                    formData.tipo_movimiento === 'salida' &&
+                    productoSeleccionado?.tipo_producto === 'PT'
+                        ? Number(formData.precio_unitario || productoSeleccionado.precio_base)
+                        : null
             });
             Swal.fire('Registrado', 'Movimiento procesado con éxito', 'success');
             navigate('/movimientos');
@@ -165,6 +198,28 @@ const MovimientoForm = () => {
                             >
                                 {empleados.map(emp => <MenuItem key={emp.id_empleado} value={emp.id_empleado}>{emp.nombre_empleado}</MenuItem>)}
                             </TextField>
+                            {formData.tipo_movimiento === 'salida' &&
+ productoSeleccionado?.tipo_producto === 'PT' && (
+
+    <Autocomplete
+        options={clientes}
+        getOptionLabel={(c) => `${c.codigo_cliente} - ${c.nombre}`}
+        value={clientes.find(c => c.id_cliente === formData.id_cliente) || null}
+        onChange={(event, newValue) => {
+            setFormData({ 
+                ...formData, 
+                id_cliente: newValue ? newValue.id_cliente : '' 
+            });
+        }}
+        renderInput={(params) => (
+            <TextField
+                {...params}
+                label="Seleccionar Cliente"
+            />
+        )}
+        noOptionsText="No hay clientes disponibles"
+    />
+)}
                         </Stack>
                     </Box>
 
@@ -190,6 +245,32 @@ const MovimientoForm = () => {
                             autoFocus
                             sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: 'white' } }}
                         />
+                        {formData.tipo_movimiento === 'salida' &&
+ productoSeleccionado?.tipo_producto === 'PT' && (
+    <TextField
+        fullWidth
+        type="number"
+        label="Precio Unitario"
+        value={formData.precio_unitario || productoSeleccionado.precio_base || ''}
+        onChange={(e) =>
+            setFormData({ ...formData, precio_unitario: e.target.value })
+        }
+        sx={{
+            mb: 2,
+            '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: 'white' }
+        }}
+    />
+)}
+{totalCalculado && (
+    <Box sx={{ textAlign: 'center', mb: 3 }}>
+        <Typography variant="overline" color="text.secondary">
+            TOTAL
+        </Typography>
+        <Typography variant="h4" fontWeight="bold" sx={{ color: getMainColor() }}>
+            ${totalCalculado}
+        </Typography>
+    </Box>
+)}
 
                         <TextField
                             fullWidth

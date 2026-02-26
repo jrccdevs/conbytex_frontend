@@ -7,7 +7,7 @@ import {
   Close, AppRegistrationTwoTone, CategoryTwoTone,
   LayersTwoTone, StraightenTwoTone, PaletteTwoTone,
   RuleTwoTone, SaveTwoTone, SettingsSuggestTwoTone,
-  CheckCircleTwoTone,
+  CheckCircleTwoTone, AttachMoneyTwoTone,
   QrCodeTwoTone
 } from '@mui/icons-material';
 import Swal from 'sweetalert2';
@@ -16,6 +16,7 @@ import { getMaterials } from '../../api/materialsApi';
 import { getSizes } from '../../api/sizesApi';
 import { getColors } from '../../api/colorsApi';
 import { getUnidades } from '../../api/unidadesApi';
+
 
 // COMPONENTE CON LÍNEA DE ENFOQUE EN DEGRADADO
 const BloqueCampo = ({ icon: Icon, etiqueta, children }) => (
@@ -65,7 +66,8 @@ const ProductoModal = ({ open, setOpen, fetchProductos, producto }) => {
   const [form, setForm] = useState({
     codigo: '',
     nombre_producto: '', tipo_producto: '', id_material: '',
-    id_talla: '', id_color: '', id_unidadmedida: '', activo: true
+    id_talla: '', id_color: '', id_unidadmedida: '',costo_unitario: '',
+    precio_base: '', activo: true
   });
 
   const [materiales, setMateriales] = useState([]);
@@ -90,13 +92,16 @@ const ProductoModal = ({ open, setOpen, fetchProductos, producto }) => {
         id_talla: producto.id_talla ?? null,
         id_color: producto.id_color || '',
         id_unidadmedida: producto.id_unidadmedida || '',
+        costo_unitario: producto.costo_unitario ?? '',
+        precio_base: producto.precio_base ?? '',
         activo: producto.activo ?? true
       });
     } else {
       setForm({
         codigo: '',
         nombre_producto: '', tipo_producto: '', id_material: '',
-        id_talla: '', id_color: '', id_unidadmedida: '', activo: true
+        id_talla: '', id_color: '', id_unidadmedida: '',costo_unitario: '',
+        precio_base: '', activo: true
       });
     }
   }, [producto, open]);
@@ -105,7 +110,7 @@ const ProductoModal = ({ open, setOpen, fetchProductos, producto }) => {
     const { name, value, type, checked } = e.target;
     const textFields = ['codigo', 'nombre_producto', 'tipo_producto'];
     setForm(prev => {
-      const newValue = type === 'checkbox' ? checked : textFields.includes(name) ? value.toUpperCase().replace(/\s/g, '') : value;
+      const newValue = type === 'checkbox' ? checked : textFields.includes(name) ? value.toUpperCase() : value;
       const updatedForm = { ...prev, [name]: newValue };
       if (name === 'tipo_producto' && newValue === 'MP') updatedForm.id_talla = null;
       return updatedForm;
@@ -150,6 +155,23 @@ const ProductoModal = ({ open, setOpen, fetchProductos, producto }) => {
         confirmButtonColor: '#6366f1'
       }); 
       return; 
+    }
+    if (form.tipo_producto === 'MP' && !form.costo_unitario) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Costo requerido',
+        text: 'Debe ingresar el costo_unitario para Materia Prima'
+      });
+      return;
+    }
+    
+    if (form.tipo_producto === 'PT' && !form.precio_base) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Precio requerido',
+        text: 'Debe ingresar el precio_base para Producto Terminado'
+      });
+      return;
     }
 
     try {
@@ -296,6 +318,40 @@ const ProductoModal = ({ open, setOpen, fetchProductos, producto }) => {
             {unidades.map(u => <MenuItem key={u.id_unidad} value={u.id_unidad}>{u.nombre_unidad}</MenuItem>)}
           </TextField>
         </BloqueCampo>
+        {form.tipo_producto === 'MP' && (
+  <BloqueCampo icon={SettingsSuggestTwoTone} etiqueta="Costo Unitario">
+    <TextField
+      fullWidth
+      name="costo_unitario"
+      type="number"
+      value={form.costo_unitario}
+      onChange={handleChange}
+      variant="standard"
+      placeholder="Ej: 10.00"
+      InputProps={{
+        disableUnderline: true,
+        sx: { fontWeight: 700, py: 0.5 }
+      }}
+    />
+  </BloqueCampo>
+)}
+{form.tipo_producto === 'PT' && (
+  <BloqueCampo icon={AttachMoneyTwoTone} etiqueta="Precio Base de Venta">
+    <TextField
+      fullWidth
+      name="precio_base"
+      type="number"
+      value={form.precio_base}
+      onChange={handleChange}
+      variant="standard"
+      placeholder="Ej: 150.00"
+      InputProps={{
+        disableUnderline: true,
+        sx: { fontWeight: 700, py: 0.5 }
+      }}
+    />
+  </BloqueCampo>
+)}
         <Box sx={{ 
           p: 2, 
           borderRadius: 4, 

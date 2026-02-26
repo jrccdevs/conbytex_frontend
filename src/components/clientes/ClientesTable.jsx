@@ -1,21 +1,23 @@
 import React from 'react';
 import {
   Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, Paper, IconButton, Chip,
-  Box, Typography, Avatar, Tooltip, Zoom, Stack
+  TableHead, TableRow, Paper, IconButton,
+  Box, Typography, Avatar, Tooltip, Zoom, Stack,
+  Chip
 } from '@mui/material';
+
 import {
   EditTwoTone,
   DeleteTwoTone,
-  WorkTwoTone,
-  AccountCircleTwoTone,
   FiberManualRecord,
-  FingerprintTwoTone
+  FingerprintTwoTone,
+  BadgeTwoTone,
+  ContactMailTwoTone
 } from '@mui/icons-material';
 
 import { useAuth } from '../../context/AuthContext';
 
-const EmpleadoTable = ({ empleados, onEdit, onDelete }) => {
+const ClientesTable = ({ clientes, onEdit, onDelete }) => {
 
   /* ============================
      🔑 AUTENTICACIÓN / PERMISOS
@@ -26,34 +28,20 @@ const EmpleadoTable = ({ empleados, onEdit, onDelete }) => {
   const isAdmin = user?.roles?.some(r => r.slug === 'admin');
 
   const canEdit =
-    isAdmin || user?.permissions?.some(p => p.slug === 'empleados.edit');
+    isAdmin || user?.permissions?.some(p => p.slug === 'clientes.edit');
 
   const canDelete =
-    isAdmin || user?.permissions?.some(p => p.slug === 'empleados.delete');
-
-  // Debug (puedes quitar luego)
-  console.log('👤 Usuario en EmpleadoTable:', user);
-  console.log('🛡️ Roles:', user?.roles);
-  console.log('🔐 Permisos:', user?.permissions);
-  console.log('✏️ canEdit:', canEdit, '🗑️ canDelete:', canDelete);
+    isAdmin || user?.permissions?.some(p => p.slug === 'clientes.delete');
 
   /* ============================
-     🎨 UTILIDADES VISUALES
+     🎨 UTILIDAD COLOR AVATAR
      ============================ */
-     const stringToColor = () => {
-
-      // Tono completamente aleatorio (0 a 360)
-      const hue = Math.floor(Math.random() * 360);
-    
-      // Saturación aleatoria entre 40% y 90% (evita colores apagados)
-      const saturation = Math.floor(Math.random() * 50) + 40;
-    
-      // Luminosidad aleatoria entre 30% y 70% (evita solo claros)
-      const lightness = Math.floor(Math.random() * 40) + 30;
-    
-      return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-    };
-    
+  const stringToColor = () => {
+    const hue = Math.floor(Math.random() * 360);
+    const saturation = Math.floor(Math.random() * 50) + 40;
+    const lightness = Math.floor(Math.random() * 40) + 30;
+    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+  };
 
   return (
     <TableContainer
@@ -63,23 +51,33 @@ const EmpleadoTable = ({ empleados, onEdit, onDelete }) => {
         borderRadius: '24px',
         border: '1px solid #e2e8f0',
         background: '#ffffff',
-        boxShadow: '0 20px 25px -5px rgba(0,0,0,0.05), 0 10px 10px -5px rgba(0,0,0,0.01)',
+        boxShadow:
+          '0 20px 25px -5px rgba(0,0,0,0.05), 0 10px 10px -5px rgba(0,0,0,0.01)',
         overflow: 'hidden'
       }}
     >
-      <Table sx={{ minWidth: 900 }}>
+      <Table sx={{ minWidth: 1000 }}>
         <TableHead>
           <TableRow sx={{ bgcolor: '#0f172a' }}>
             <TableCell sx={{ color: '#f8fafc', fontWeight: 800 }}>
               <Stack direction="row" spacing={1} alignItems="center">
                 <FingerprintTwoTone fontSize="small" />
-                <span>CODIGO</span>
+                <span>CÓDIGO</span>
               </Stack>
             </TableCell>
-            <TableCell sx={{ color: '#f8fafc', fontWeight: 800 }}>EMPLEADO</TableCell>
-            <TableCell sx={{ color: '#f8fafc', fontWeight: 800 }}>CARGO / ROL</TableCell>
-            <TableCell sx={{ color: '#f8fafc', fontWeight: 800 }}>SISTEMA</TableCell>
-            <TableCell align="center" sx={{ color: '#f8fafc', fontWeight: 800 }}>ESTADO</TableCell>
+
+            <TableCell sx={{ color: '#f8fafc', fontWeight: 800 }}>
+              CLIENTE
+            </TableCell>
+
+            <TableCell sx={{ color: '#f8fafc', fontWeight: 800 }}>
+              DOCUMENTO
+            </TableCell>
+
+            <TableCell align="center" sx={{ color: '#f8fafc', fontWeight: 800 }}>
+              ESTADO
+            </TableCell>
+
             <TableCell align="right" sx={{ color: '#f8fafc', fontWeight: 800, pr: 4 }}>
               GESTIÓN
             </TableCell>
@@ -87,83 +85,78 @@ const EmpleadoTable = ({ empleados, onEdit, onDelete }) => {
         </TableHead>
 
         <TableBody>
-          {empleados.map((emp) => (
+          {clientes.map((cli) => (
             <TableRow
-              key={emp.id_empleado}
+              key={cli.id_cliente}
               sx={{
                 borderBottom: '1px solid #f1f5f9',
                 '&:hover': { bgcolor: '#f8faff' }
               }}
             >
-              {/* ID */}
-              <TableCell>
-  <Typography
-    sx={{
-      fontWeight: 900,
-      fontFamily: 'monospace',
-      bgcolor: '#f1f5f9',
-      px: 1,
-      py: 0.5,
-      borderRadius: '6px',
-      fontSize: '0.8rem'
-    }}
-  >
-    {emp.codigo}
-  </Typography>
-</TableCell>
 
-              {/* EMPLEADO */}
+              {/* CÓDIGO */}
+              <TableCell>
+                <Typography
+                  sx={{
+                    fontWeight: 900,
+                    fontFamily: 'monospace',
+                    bgcolor: '#f1f5f9',
+                    px: 1,
+                    py: 0.5,
+                    borderRadius: '6px',
+                    fontSize: '0.8rem'
+                  }}
+                >
+                  {cli.codigo_cliente}
+                </Typography>
+              </TableCell>
+
+              {/* CLIENTE */}
               <TableCell>
                 <Stack direction="row" spacing={2} alignItems="center">
                   <Avatar
                     sx={{
-                      bgcolor: stringToColor(emp.nombre_empleado),
+                      bgcolor: stringToColor(cli.nombre),
                       fontWeight: 800
                     }}
                   >
-                    {emp.nombre_empleado.substring(0, 2).toUpperCase()}
+                    {cli.nombre?.substring(0, 2).toUpperCase()}
                   </Avatar>
+
                   <Box>
-  <Typography sx={{ fontWeight: 800 }}>
-    {emp.nombre_empleado}
-  </Typography>
+                    <Typography sx={{ fontWeight: 800 }}>
+                      {cli.nombre}
+                    </Typography>
 
-  {emp.email && (
-    <Typography variant="caption" sx={{ color: '#64748b', display: 'block' }}>
-      {emp.email}
-    </Typography>
-  )}
+                    {cli.email && (
+                      <Typography
+                        variant="caption"
+                        sx={{ color: '#64748b', display: 'block' }}
+                      >
+                        {cli.email}
+                      </Typography>
+                    )}
 
-  {emp.telefono && (
-    <Typography variant="caption" sx={{ color: '#94a3b8', display: 'block' }}>
-      {emp.telefono}
-    </Typography>
-  )}
-</Box>
+                    {cli.telefono && (
+                      <Typography
+                        variant="caption"
+                        sx={{ color: '#94a3b8', display: 'block' }}
+                      >
+                        {cli.telefono}
+                      </Typography>
+                    )}
+                  </Box>
                 </Stack>
               </TableCell>
 
-              {/* CARGO */}
+              {/* DOCUMENTO */}
               <TableCell>
                 <Stack direction="row" spacing={1} alignItems="center">
-                  <WorkTwoTone sx={{ fontSize: 16, color: '#3b82f6' }} />
+                  <BadgeTwoTone sx={{ fontSize: 18, color: '#6366f1' }} />
                   <Typography sx={{ fontWeight: 700 }}>
-                    {emp.cargo}
+                    {cli.tipo_documento} - {cli.numero_documento}
                   </Typography>
                 </Stack>
-              </TableCell>
-
-              {/* USUARIO */}
-              <TableCell>
-                <Chip
-                  label={emp.id_usuario ? `User: ${emp.id_usuario}` : 'Sin Cuenta'}
-                  size="small"
-                  icon={<AccountCircleTwoTone />}
-                  sx={{
-                    fontWeight: 800,
-                    bgcolor: emp.id_usuario ? '#f0fdf4' : '#fafafa'
-                  }}
-                />
               </TableCell>
 
               {/* ESTADO */}
@@ -172,11 +165,11 @@ const EmpleadoTable = ({ empleados, onEdit, onDelete }) => {
                   <FiberManualRecord
                     sx={{
                       fontSize: 10,
-                      color: emp.activo ? '#22c55e' : '#ef4444'
+                      color: cli.estado ? '#22c55e' : '#ef4444'
                     }}
                   />
                   <Typography sx={{ fontSize: '0.7rem', fontWeight: 900 }}>
-                    {emp.activo ? 'ACTIVO' : 'INACTIVO'}
+                    {cli.estado ? 'ACTIVO' : 'INACTIVO'}
                   </Typography>
                 </Stack>
               </TableCell>
@@ -185,9 +178,9 @@ const EmpleadoTable = ({ empleados, onEdit, onDelete }) => {
               <TableCell align="right">
                 <Stack direction="row" spacing={1} justifyContent="flex-end">
                   {canEdit && (
-                    <Tooltip title="Editar Empleado" TransitionComponent={Zoom} arrow>
+                    <Tooltip title="Editar Cliente" TransitionComponent={Zoom} arrow>
                       <IconButton
-                        onClick={() => onEdit(emp)}
+                        onClick={() => onEdit(cli)}
                         sx={{
                           bgcolor: '#f1f5f9',
                           '&:hover': { bgcolor: '#6366f1', color: '#fff' }
@@ -199,9 +192,9 @@ const EmpleadoTable = ({ empleados, onEdit, onDelete }) => {
                   )}
 
                   {canDelete && (
-                    <Tooltip title="Eliminar Empleado" TransitionComponent={Zoom} arrow>
+                    <Tooltip title="Eliminar Cliente" TransitionComponent={Zoom} arrow>
                       <IconButton
-                        onClick={() => onDelete(emp.id_empleado)}
+                        onClick={() => onDelete(cli.id_cliente)}
                         sx={{
                           bgcolor: '#fff1f2',
                           color: '#e11d48',
@@ -214,6 +207,7 @@ const EmpleadoTable = ({ empleados, onEdit, onDelete }) => {
                   )}
                 </Stack>
               </TableCell>
+
             </TableRow>
           ))}
         </TableBody>
@@ -222,4 +216,4 @@ const EmpleadoTable = ({ empleados, onEdit, onDelete }) => {
   );
 };
 
-export default EmpleadoTable;
+export default ClientesTable;

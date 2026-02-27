@@ -266,27 +266,69 @@ const OrdenDetail = () => {
 
             {/* ESTILOS CSS PARA IMPRESIÓN */}
             <style>
-                {`
-                @media print {
-                    body { 
-                        background-color: #fff !important; 
-                        margin: 0;
-                        padding: 0;
-                    }
-                    .no-print { 
-                        display: none !important; 
-                    }
-                    /* Ocultar sidebar y topbar si usas LayoutPrincipal */
-                    nav, header, aside, .MuiDrawer-root, .MuiAppBar-root { 
-                        display: none !important; 
-                    }
-                    main {
-                        margin: 0 !important;
-                        padding: 0 !important;
-                    }
-                }
-                `}
-            </style>
+{`
+@media print {
+    /* 1. Limpieza total de interfaz */
+    body { 
+        background-color: #fff !important; 
+        margin: 0 !important;
+        padding: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .no-print, nav, header, aside, .MuiDrawer-root, .MuiAppBar-root { 
+        display: none !important; 
+    }
+
+    main {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        display: block !important;
+    }
+
+    /* 2. Ajuste del contenedor de la factura (Paper/Card) */
+    /* Si usas un ID específico como #invoice-paper, cámbialo aquí */
+    .MuiPaper-root, .MuiCard-root {
+        box-shadow: none !important;
+        border: none !important;
+        margin: 0 !important;
+        width: 100% !important;
+    }
+
+    /* 3. Forzar que las TABLAS entren en el ancho de hoja */
+    table {
+        width: 100% !important;
+        table-layout: fixed !important; /* Fuerza a respetar los anchos */
+        word-wrap: break-word !important;
+    }
+
+    th, td {
+        font-size: 10pt !important; /* Tamaño de fuente ideal para impresión */
+        padding: 4px !important;    /* Compactar espacio */
+        overflow: hidden !important;
+    }
+
+    /* 4. Configuración de página física */
+    @page {
+        size: letter; /* Cambia a A4 si es tu caso */
+        margin: 0.5cm !important; /* Margen mínimo de seguridad */
+    }
+
+    /* 5. Evitar que una fila se parta en dos hojas */
+    tr {
+        page-break-inside: avoid !important;
+        page-break-after: auto !important;
+    }
+
+    /* 6. Asegurar que las imágenes/logos no se desborden */
+    img {
+        max-width: 100% !important;
+    }
+}
+`}
+</style>
         </Box>
     );
 };

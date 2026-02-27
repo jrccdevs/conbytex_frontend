@@ -61,40 +61,59 @@ const MovimientoDetalle = () => {
         }}>
             
             <style>
-            {`
-    @media print {
-        /* 1. Ocultar absolutamente todo el layout, dashboards, navbars, etc. */
-        body * {
-            visibility: hidden;
-            background: none !important;
-        }
-
-        /* 2. Seleccionar el papel de la factura y todo su contenido para que sea visible */
-        #invoice-paper, #invoice-paper * {
-            visibility: visible;
-        }
-
-        /* 3. Posicionar el papel al inicio de la página de impresión */
-        #invoice-paper {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100% !important;
-            max-width: none !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            border: none !important;
-            box-shadow: none !important;
-        }
-
-        /* 4. Forzar que no haya márgenes grises ni fondos raros */
-        @page {
-            size: auto;
-            margin: 10mm;
-        }
+{`
+@media print {
+    /* 1. Ocultar todo lo demás */
+    body * {
+        visibility: hidden;
     }
-    `}
-            </style>
+
+    /* 2. Mostrar factura y forzar fondo blanco */
+    #invoice-paper, #invoice-paper * {
+        visibility: visible;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    #invoice-paper {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 10px !important; /* Un pequeño respiro */
+    }
+
+    /* 3. COMPACTAR TABLAS Y FUENTES */
+    /* Reducimos la fuente general para que quepa más detalle */
+    table {
+        width: 100% !important;
+        font-size: 11px !important; 
+    }
+
+    th, td {
+        padding: 4px 8px !important; /* Celdas más delgadas */
+        border-bottom: 1px solid #eee !important;
+    }
+
+    /* 4. AJUSTE DE PÁGINA */
+    @page {
+        size: letter;
+        margin: 0.5cm; /* Margen pequeño para aprovechar el papel */
+    }
+
+    /* 5. EVITAR SALTOS DE LÍNEA EN MEDIO DE UN PRODUCTO */
+    tr {
+        page-break-inside: avoid !important;
+    }
+
+    /* 6. OCULTAR BOTONES DE ACCIÓN (Si los hay dentro del paper) */
+    button, .no-print {
+        display: none !important;
+    }
+}
+`}
+</style>
             
             <Stack direction="row" spacing={2} sx={{ mb: 3, width: '100%', maxWidth: '850px' }} className="no-print">
                 <Button startIcon={<ArrowBack />} onClick={() => navigate('/movimientos')} sx={{ color: '#555' }}>
@@ -259,13 +278,26 @@ const MovimientoDetalle = () => {
                             <Typography variant="caption" fontWeight="700" sx={{ textTransform: 'uppercase' }}>
                                 Firma Entrega
                             </Typography>
+                            <Typography variant="body2">{movimiento.empleado || 'Admin Central'}</Typography>
                         </Box>
                     </Grid>
                     <Grid item xs={6}>
                         <Box sx={{ borderTop: '1px solid #ccc', pt: 1, textAlign: 'center' }}>
+                            
                             <Typography variant="caption" fontWeight="700" sx={{ textTransform: 'uppercase' }}>
                                 Firma Recibido
                             </Typography>
+                            {isSalida && movimiento.cliente_nombre && (
+                    <Box sx={{ mb: 5, p: 2, bgcolor: '#fbfbfb', border: '1px solid #eee', borderRadius: 1 }}>
+                      
+                        <Grid container spacing={2}>
+                            <Grid item xs={12} sm={6}>
+                                <Typography variant="body2"> {movimiento.cliente_nombre}</Typography>
+                            </Grid>
+                            
+                        </Grid>
+                    </Box>
+                )}
                         </Box>
                     </Grid>
                 </Grid>

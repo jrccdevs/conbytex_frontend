@@ -73,16 +73,9 @@ const Sidebar = ({ drawerWidth = 280 }) => {
 
       {/* --- BRANDING --- */}
       <Box sx={{ p: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
-        <Box sx={{
-          width: 40, height: 40, borderRadius: '12px',
-          background: `linear-gradient(135deg, ${colors.accent}, #4f46e5)`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: `0 8px 16px ${alpha(colors.accent, 0.4)}`
-        }}>
-          <Typography sx={{ fontWeight: 900, color: 'white' }}>CI</Typography>
-        </Box>
+      
         <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1.1rem', letterSpacing: '0.5px' }}>
-          CONTROL <Box component="span" sx={{ color: colors.accent }}>IND.</Box>
+          SISTEMA <Box component="span" >DE PRODUCCION</Box>
         </Typography>
       </Box>
 
@@ -113,13 +106,7 @@ const Sidebar = ({ drawerWidth = 280 }) => {
 
         {/* SECCIÓN: SEGURIDAD (Se activa con tu slug real 'users.view') */}
         
-         
-            <Typography variant="caption" sx={{
-              px: 2, py: 2, display: 'block', color: colors.adminAccent,
-              fontWeight: 800, fontSize: '0.65rem', letterSpacing: '1.5px', mt: 2
-            }}>
-              SISTEMA DE SEGURIDAD
-            </Typography>
+        
 
             {/* Gestión de Usuarios */}
             {tienePermiso('users.view') && (
